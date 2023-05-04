@@ -5,7 +5,12 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend:{},
+    // Some useful comment
+    fontFamily: {
+      'nunito': ['nunito', 'sans-serif'],
+      'MyFont': ['"My Font"', 'serif'] // Ensure fonts with spaces have " " surrounding it.
+    },
   },
   plugins: [
     require("daisyui")
