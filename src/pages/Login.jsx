@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import {FcGoogle} from "react-icons/fc";
 import {FaFacebook} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import http from "../helpers/http";
 import React from "react";
 
 //IMAGES
@@ -20,7 +20,7 @@ const Login = () => {
       const {value: email} = event.target.email
       const {value: password} = event.target.password
       const body = new URLSearchParams({email, password}).toString() //mengambil query string
-      const {data} = await axios.post('http://localhost:8888/auth/login', body)
+      const {data} = await http().post('http://localhost:8888/auth/login', body)
       window.localStorage.setItem('token', data.results.token)
       setToken(data.results.token)
     }catch (err) {
