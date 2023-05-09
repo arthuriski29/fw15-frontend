@@ -1,14 +1,45 @@
 import { Link } from "react-router-dom";
 import {FcGoogle} from "react-icons/fc";
 import {FaFacebook} from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import React from "react";
 
 //IMAGES
 import peopleBg from "../assets/images/picture.png"
 import weTick from "../assets/images/wetick-logo.png"
 
 const Login = () => {
+  const navigate = useNavigate()
+  const [errorMessage, setErrorMessage] = React.useState('')
+  const [token, setToken] = React.useState('')
+  const doLogin = async (event) => {
+    event.preventDefault()
+    setErrorMessage('')
+    try {
+      const {value: email} = event.target.email
+      const {value: password} = event.target.password
+      const body = new URLSearchParams({email, password}).toString() //mengambil query string
+      const {data} = await axios.post('http://localhost:8888/auth/login', body)
+      window.localStorage.setItem('token', data.results.token)
+      setToken(data.results.token)
+    }catch (err) {
+      const message = err?.response?.data?.message
+      if(message){
+        setErrorMessage(message)
+      } 
+    }
+
+  }
+  React.useEffect(()=>{
+    if (token){
+      console.log('test')
+      navigate('/')
+    }
+  }, [token, navigate])
+
   return(
-  
+
     <div className="flex h-screen">
       <div className="flex-1 bg-accent">
         <div className="flex justify-end items-center h-screen">
@@ -28,8 +59,11 @@ const Login = () => {
         <div className="w-[80%] flex flex-col gap-5">
           <div className="text-3xl font-bold">Sign In</div>
           <div className="">Hi, Welcome back to Urticket! </div>
+          {errorMessage && <div>
+            <div className="alert alert-error">{errorMessage}</div>
+          </div>}
         </div>
-        <form className="w-[80%] flex flex-col gap-5">
+        <form onSubmit={doLogin} className="w-[80%] flex flex-col gap-5">
           <div>
             <input className="input input-bordered border-1 w-full" type="text" name="username" placeholder="Username" />
           </div>
@@ -63,5 +97,8 @@ const Login = () => {
     </div>
   
   )
+  
+
+  
 }
 export default Login;
