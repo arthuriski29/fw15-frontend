@@ -4,6 +4,7 @@ import {FaFacebook} from "react-icons/fa";
 
 //IMAGES
 import peopleBg from "../assets/images/picture.png"
+import weTick from "../assets/images/wetick-logo.png"
 
 const Login = () => {
   return(
@@ -15,7 +16,16 @@ const Login = () => {
         </div>
       </div>
       <div className="flex flex-col max-w-md w-full justify-center items-center gap-8">
-        <div className="w-[80%] flex flex-col gap-8">
+        <Link className="w-[80%] flex gap-5" to="/">
+          <div>
+            <img className="w-12 h-12" src={weTick} alt="wetick-logo"/>
+          </div>
+          <div className="flex items-center">
+            <span className="text-3xl font-bold text-third">We</span>
+            <span className="text-3xl font-bold text-secondary">tick</span>
+          </div>
+        </Link>
+        <div className="w-[80%] flex flex-col gap-5">
           <div className="text-3xl font-bold">Sign In</div>
           <div className="">Hi, Welcome back to Urticket! </div>
         </div>

@@ -1,9 +1,10 @@
-//IMAGES
 import { Link } from "react-router-dom";
+
+//IMAGES
 import peopleBg from "../assets/images/picture.png"
 import weTick from "../assets/images/wetick-logo.png"
 
-const ForgotPassword = () => {
+const SignUp = () => {
   return(
   
     <div className="flex h-screen">
@@ -23,14 +24,31 @@ const ForgotPassword = () => {
           </div>
         </Link>
         <div className="w-[80%] flex flex-col gap-4">
-          <div className="text-2xl font-bold">Forgot Password</div>
+          <div className="text-2xl font-bold">Sign Up</div>
           <div className="flex gap-2">
-            <span className="">You’ll get mail soon on your email</span>
+            <span className="">Already have an account?</span>
+            <Link className="font-semibold hover:text-secondary" to="/login">Login</Link>
           </div>
         </div>
         <form className="w-[80%] flex flex-col gap-5">
           <div>
+            <input className="input input-bordered border-1 w-full" type="text" name="Fullname" placeholder="Full Name" />
+          </div>
+          <div>
             <input className="input input-bordered border-1 w-full" type="email" name="email" placeholder="Email" />
+          </div>
+          <div>
+            <input className="input input-bordered border-1 w-full" type="password" name="password" placeholder="Password" />
+          </div>
+          <div>
+            <input className="input input-bordered border-1 w-full" type="password" name="cfr-password" placeholder="Confirm Password" />
+          </div>
+          <div>
+            <label id="input-checkbox" className="signup-label">
+              <input id="checkbox" type="checkbox" />
+              Accept terms and condition
+              <div className="error"></div>
+            </label>
           </div>
           <div className="flex flex-col justify-center items-center gap-5">
             <div className="w-full text-center">
@@ -43,4 +61,4 @@ const ForgotPassword = () => {
   
   )
 }
-export default ForgotPassword;
+export default SignUp;
