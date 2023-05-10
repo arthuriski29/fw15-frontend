@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import {FcGoogle} from "react-icons/fc";
 import {FaFacebook} from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import http from "../helpers/http";
 import React from "react";
 
@@ -10,12 +10,15 @@ import peopleBg from "../assets/images/picture.png"
 import weTick from "../assets/images/wetick-logo.png"
 
 const Login = () => {
+  const location = useLocation()
   const navigate = useNavigate()
   const [errorMessage, setErrorMessage] = React.useState('')
+  const [warningMessage, setWarningMessage] = React.useState(location.state?.warningMessage)
   const [token, setToken] = React.useState('')
   const doLogin = async (event) => {
     event.preventDefault()
     setErrorMessage('')
+    setWarningMessage('')
     try {
       const {value: email} = event.target.email
       const {value: password} = event.target.password
@@ -32,6 +35,7 @@ const Login = () => {
 
   }
   React.useEffect(()=>{
+    
     if (token){
       console.log('test')
       navigate('/')
@@ -62,16 +66,19 @@ const Login = () => {
           {errorMessage && <div>
             <div className="alert alert-error">{errorMessage}</div>
           </div>}
+          {warningMessage && <div>
+            <div className="alert alert-warning">{location.state?.warningMessage}</div>
+          </div>}
         </div>
         <form onSubmit={doLogin} className="w-[80%] flex flex-col gap-5">
           <div>
-            <input className="input input-bordered border-1 w-full" type="text" name="username" placeholder="Username" />
+            <input onFocus={()=>setWarningMessage('')} className="input input-bordered border-1 w-full" type="text" name="username" placeholder="Username" />
           </div>
           <div>
-            <input className="input input-bordered border-1 w-full" type="email" name="email" placeholder="Email" />
+            <input onFocus={()=>setWarningMessage('')} className="input input-bordered border-1 w-full" type="email" name="email" placeholder="Email" />
           </div>
           <div>
-            <input className="input input-bordered border-1 w-full" type="password" name="password" placeholder="Password" />
+            <input onFocus={()=>setWarningMessage('')} className="input input-bordered border-1 w-full" type="password" name="password" placeholder="Password" />
           </div>
           <div className="text-right">
             <Link className="hover:text-secondary bold text-[#38291B]"to="/forgot-password">Forgot Password</Link>
