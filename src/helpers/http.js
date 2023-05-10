@@ -6,7 +6,8 @@ const http = (token) => {
       headers.Authorization = `Bearer ${token}`
     }
     return axios.create({
-      headers
+      headers,
+      baseURL: 'http://localhost:8888'
     })
   
 }
