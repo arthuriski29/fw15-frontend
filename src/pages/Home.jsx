@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import React from "react";
 import axios from "axios";
+import http from "../helpers/http";
+import { useNavigate } from "react-router-dom";
 
 //IMAGES
 import weTick from "../assets/images/wetick-logo.png"
@@ -15,23 +17,43 @@ import solo from "../assets/images/Solo.png"
 import yogyakarta from "../assets/images/Yogyakarta.png"
 import semarang from "../assets/images/Semarang.png"
 
+import drogba from "../assets/images/drogba.jpg"
+
 const Home = () => {
+  const navigate = useNavigate()
   const [events, setEvents] = React.useState([])
+  const [partners, setPartners] = React.useState([])
+  const [profile, setProfile] = React.useState({})
+  const [token, setToken] = React.useState('')
   React.useEffect(()=>{
-    async function getData(){
+    async function getDataEvents(){
       const {data} = await axios.get('http://localhost:8888/events')
       setEvents(data.results)
     }
-    getData()
-  },[])
-  const [partners, setPartners] = React.useState([])
-  React.useEffect(()=>{
-    async function getData(){
+    getDataEvents()
+
+    async function getDataPartners(){
       const {data} = await axios.get('http://localhost:8888/partners')
       setPartners(data.results)
     }
-    getData()
+    getDataPartners()
+
+    async function getProfileData(){
+      const token = window.localStorage.getItem('token')
+      const {data} = await http(token).get('/profile')
+      setProfile(data.results)
+    }
+    getProfileData()
+
+    if(window.localStorage.getItem('token')){
+      setToken(window.localStorage.getItem('token'))
+    }
   },[])
+
+  const doLogout = ()=> {
+    window.localStorage.removeItem('token')
+    navigate('/login')
+  }
 
   return(
     <>
@@ -60,14 +82,31 @@ const Home = () => {
               <li className="flex justify-center items-center min-w-[100px]"><a className="hover:text-[#FFBA7B]" href="event.html">Location</a></li>
             </ul>
             <div className="flex md:flex-row flex-col gap-3 w-full md:w-[unset]">
-              <div className="w-full">
-                <Link className="text-[#38291B] hover:text-white hover:bg-[#38291B] w-full min-w-[120px] inline-block text-center py-2 font-bold rounded"
-                  to="/login">Login</Link>
+              {token ? 
+              <div className="flex gap-5">
+                <Link to="/profile" className="flex items-center gap-5 font-semibold text-sm leading-5">
+                  <div className="p-[2px] border-transparent rounded-full bg-gradient-to-r from-[#9E91AE] to-[#450206]">
+                    <img className="border-[3.38px] border-white object-cover w-11 h-11 rounded-full" src={drogba}
+                      alt="profile"/>
+                  </div>
+                  <div className="font-semibold text-sm leading-5">
+                    <div>{profile?.fullName}</div>
+                  </div>
+                </Link>
+                <button onClick={doLogout} className="btn btn-primary">Log Out</button>
               </div>
-              <div className="w-full">
-                <Link className="bg-[#AA7C52] hover:bg-[#FFBA7B] w-full min-w-[120px] inline-block text-center py-2 text-white hover:text-[#38291B] font-bold rounded"
-                  to="/signup">Sign Up</Link>
+              :
+              <div className="flex gap-3">
+                <div className="w-full">
+                  <Link className="text-[#38291B] hover:text-white hover:bg-[#38291B] w-full min-w-[120px] inline-block text-center py-2 font-bold rounded"
+                    to="/login">Login</Link>
+                </div>
+                <div className="w-full">
+                  <Link className="bg-[#AA7C52] hover:bg-[#FFBA7B] w-full min-w-[120px] inline-block text-center py-2 text-white hover:text-[#38291B] font-bold rounded"
+                    to="/signup">Sign Up</Link>
+                </div>
               </div>
+              }
             </div>
           </div>
         </div>
@@ -173,7 +212,7 @@ const Home = () => {
           <div className="event-banner-wrap">
             {events.map(event => {
               return (
-                <React.Fragment key={event.id}>
+                <Link to={`/event-detail/${event.id}`} key={`event-${event.id}`}>
                   <div className="event-banner">
                     <img src={`http://localhost:8888/uploads/${event.picture}`} />
                     <div className="absolute bottom-0 text-white bg-[#AA7C52] p-5">
@@ -181,7 +220,7 @@ const Home = () => {
                       <div className="font-semibold text-xl leading-7 tracking-[2px] text-white">{event.title}</div>
                     </div>
                   </div>
-                </React.Fragment>
+                </Link>
               )
             })}
           </div>
