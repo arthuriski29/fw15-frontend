@@ -1,14 +1,17 @@
 import { Link } from "react-router-dom";
 import React from "react";
-import axios from "axios";
 import http from "../helpers/http";
 import { useNavigate } from "react-router-dom";
+import moment from "moment/moment"; 
+import { useDispatch, useSelector } from "react-redux";
+import { logout as logoutAction} from "../redux/reducers/auth"; 
 
 //IMAGES
 import weTick from "../assets/images/wetick-logo.png"
 import peopleBg from "../assets/images/picture.png"
 import line4 from "../assets/images/Line 4.svg"
 import dateIcon from "../assets/images/date-icon.png"
+import viewers from "../assets/images/avatars.png"
 import jakarta from "../assets/images/Jakarta.png"
 import bandung from "../assets/images/Bandung.png"
 import bali from "../assets/images/Bali.png"
@@ -17,41 +20,63 @@ import solo from "../assets/images/Solo.png"
 import yogyakarta from "../assets/images/Yogyakarta.png"
 import semarang from "../assets/images/Semarang.png"
 
-import drogba from "../assets/images/drogba.jpg"
+//ICONS
+import { FiAlignJustify } from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
+import { FiMapPin } from "react-icons/fi";
+import { FiArrowRight } from "react-icons/fi";
+import { FiArrowLeft } from "react-icons/fi";
+
+// import drogba from "../assets/images/drogba.jpg"
 
 const Home = () => {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const [events, setEvents] = React.useState([])
+  const [eventCategories, setEventCategories] = React.useState([])
+  const [categories, setCategories] = React.useState([])
   const [partners, setPartners] = React.useState([])
   const [profile, setProfile] = React.useState({})
-  const [token, setToken] = React.useState('')
+  const token = useSelector(state => state.auth.token)
+
+  async function getEventCategories(name){
+    const {data} = await http().get('/events', {params: {category: name}})
+    setEventCategories(data.results)
+  }
+  
+
   React.useEffect(()=>{
     async function getDataEvents(){
-      const {data} = await axios.get('http://localhost:8888/events')
+      const {data} = await http().get('/events')
       setEvents(data.results)
     }
     getDataEvents()
 
+    getEventCategories()
+
     async function getDataPartners(){
-      const {data} = await axios.get('http://localhost:8888/partners')
+      const {data} = await http().get('/partners')
       setPartners(data.results)
     }
     getDataPartners()
 
     async function getProfileData(){
-      const token = window.localStorage.getItem('token')
       const {data} = await http(token).get('/profile')
       setProfile(data.results)
     }
-    getProfileData()
-
-    if(window.localStorage.getItem('token')){
-      setToken(window.localStorage.getItem('token'))
+    if(token) {
+      getProfileData()
     }
+
+    async function getCategories(){
+      const {data} = await http().get('/categories')
+      setCategories(data.results)
+    }
+    getCategories()
   },[])
 
   const doLogout = ()=> {
-    window.localStorage.removeItem('token')
+    dispatch(logoutAction())
     navigate('/login')
   }
 
@@ -71,7 +96,7 @@ const Home = () => {
             </div>
             <div className="md:hidden">
               <button id="menu-toggler" className="border-2 border-black px-4 py-2 rounded-xl">
-                <i data-feather="align-justify"></i>
+                <i><FiAlignJustify/></i>
               </button>
             </div>
           </div>
@@ -86,8 +111,8 @@ const Home = () => {
               <div className="flex gap-5">
                 <Link to="/profile" className="flex items-center gap-5 font-semibold text-sm leading-5">
                   <div className="p-[2px] border-transparent rounded-full bg-gradient-to-r from-[#9E91AE] to-[#450206]">
-                    <img className="border-[3.38px] border-white object-cover w-11 h-11 rounded-full" src={drogba}
-                      alt="profile"/>
+                  {profile.picture && <img className="border-[3.38px] border-white object-cover w-11 h-11 rounded-full"
+                  src={`http://localhost:8888/uploads/${profile.picture}`} alt="profile"/>}
                   </div>
                   <div className="font-semibold text-sm leading-5">
                     <div>{profile?.fullName}</div>
@@ -116,9 +141,9 @@ const Home = () => {
             <div className="block w-full">
               <div className="flex rounded-[20px] bg-white h-[75px]">
                 <span className="flex flex-1 justify-between border-0  py-[25px] pl-[25px] pr-0">
-                  <i data-feather="search"></i>
+                  <i><FiSearch /></i>
                   <input className="font-medium text-xs leading-4" type="text" placeholder="Search Event..." />
-                  <i data-feather="map-pin"></i>
+                  <i><FiMapPin /></i>
                   <select className="outline-none px-3 appearance-none font-medium text-xs md:min-w-[200px] leading-4">
                     <option disabled="" selected="">Where?</option>
                     <option>Jakarta</option>
@@ -136,7 +161,7 @@ const Home = () => {
                   className="flex justify-center items-center mr-[25px] w-[45px] h-[45px] bg-[#FFBA7B] rounded-[10px] self-center "
                   type="submit">
                   <span className="text-[#38291B]">
-                    <i data-feather="arrow-right"></i>
+                    <i><FiArrowRight /></i>
                   </span>
                 </button>
               </div>
@@ -164,7 +189,7 @@ const Home = () => {
             <div id="event-date-layout" className="flex inline-block flex-1 h-[75px] md:gap-[20px] gap-[10px]">
               <div className="w-[45px] h-full rounded-[10px] flex justify-center items-center">
                 <span className="rounded-[10px] w-[45px] h-[45px] p-[10px] shadow-[0_2px_15px_rgba(26,60,68,0.08)]">
-                  <i data-feather="arrow-left"></i>
+                  <i><FiArrowLeft/></i>
                 </span>
               </div>
               <div className="md:max-w-full max-w-[150px] overflow-x-auto">
@@ -195,7 +220,7 @@ const Home = () => {
               <div className="w-[45px] h-full rounded-[10px] flex justify-center items-center">
                 <span
                   className="bg-[#AA7C52] rounded-[10px] w-[45px] h-[45px] p-[10px] shadow-[0_2px_15px_rgba(26,60,68,0.08)]">
-                  <i data-feather="arrow-right"></i>
+                  <i><FiArrowRight /></i>
                 </span>
               </div>
 
@@ -215,10 +240,19 @@ const Home = () => {
                 <Link to={`/event-detail/${event.id}`} key={`event-${event.id}`}>
                   <div className="event-banner">
                     <img src={`http://localhost:8888/uploads/${event.picture}`} />
-                    <div className="absolute bottom-0 text-white bg-[#AA7C52] p-5">
+                    <div className="banner-text">
+                      <div className="banner-text-first">{moment(event.date).format(`ddd, MMM Do 'YY, h:mm A`)}</div>
+                      <div className="banner-text-second">{event.event}</div>
+                      <div className="banner-view-account">
+                        <div>
+                          <img src={viewers} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* <div className="absolute bottom-0 text-white bg-[#AA7C52] p-5">
                       <div className="font-medium text-sm leading-7 tracking-[1px] text-white">{event.date}</div>
                       <div className="font-semibold text-xl leading-7 tracking-[2px] text-white">{event.title}</div>
-                    </div>
+                    </div> */}
                   </div>
                 </Link>
               )
@@ -226,10 +260,10 @@ const Home = () => {
           </div>
           <div className="below-banner-arrow">
             <div className="left-arrow">
-              <i data-feather="arrow-left"></i>
+              <i><FiArrowLeft/></i>
             </div>
             <div className="right-arrow">
-              <i data-feather="arrow-right"></i>
+              <i><FiArrowRight/></i>
             </div>
           </div>
         </div>
@@ -308,47 +342,42 @@ const Home = () => {
             <div>
               <p className="font-semibold text-4xl text-center leading-[54px]">Browse Events By Category</p>
             </div>
-            <div className="flex flex-col items-center gap-3 md:flex-row md:justify-between md:gap-[20px] md:w-full my-[25px] ">
-              <div className="w-[80%]">
-                <div className="flex flex-1 justify-between md:max-w-full max-w-[875px] gap-[20px] overflow-x-auto">
-                  <div className="font-medium text-base leading-6 justify-center text-center min-w-[75px] text-[#FFBA7B] border-b-2 border-[#FFBA7B] ">
-                    Music
-                  </div>
-                  <div className="font-medium text-base leading-6 justify-center text-center min-w-[75px] text-[#C1C5D0]">
-                    Arts
-                  </div>
-                  <div className="font-medium text-base leading-6 justify-center text-center min-w-[75px] text-[#C1C5D0]">
-                    Outdoors
-                  </div>
-                  <div className="font-medium text-base leading-6 justify-center text-center min-w-[75px] text-[#C1C5D0]">
-                    Workshop
-                  </div>
-                  <div className="font-medium text-base leading-6 justify-center text-center min-w-[75px] text-[#C1C5D0]">
-                    Sport
-                  </div>
-                  <div className="font-medium text-base leading-6 justify-center text-center min-w-[75px] text-[#C1C5D0]">
-                    Festival
-                  </div>
-                  <div className="font-medium text-base leading-6 justify-center text-center min-w-[75px] text-[#C1C5D0]">
-                    Fashion
-                  </div>
+            
+            <div className="flex flex-col items-center gap-3 md:flex-row md:justify-between md:gap-[20px] md:w-full my-[20px] ">
+              <div className="w-[100%]">
+                <div className="flex flex-1 justify-between md:max-w-full max-w-[875px] h-6 gap-[20px] overflow-x-auto" id="categories-list">
+                {categories.map(category => {
+                  return (
+                    <button onClick={()=> getEventCategories(category.name)} key={`category-${category.id}`} className="font-medium text-base leading-6 justify-center text-center min-w-[75px] text-[#C1C5D0] hover:text-secondary hover:border-b-2 hover:border-[#FFBA7B] ">
+                      {category.name}
+                    </button>
+                  )
+                })}
                 </div>
               </div>
             </div>
             <div className="event-banner-wrap">
-              {events.map(event => {
+              {eventCategories.map(event => {
                 return (
-                  <React.Fragment key={event.id}>
-                    <div className="event-banner">
-                      <img src={`http://localhost:8888/uploads/${event.picture}`} />
-                      <div className="absolute bottom-0 text-white bg-[#AA7C52] p-5">
-                        <div className="font-medium text-sm leading-7 tracking-[1px] text-white">{event.date}</div>
-                        <div className="font-semibold text-xl leading-7 tracking-[2px] text-white">{event.title}</div>
+                  <Link to={`/event-detail/${event.id}`} key={`event-category-${event.id}`}>
+                  <div className="event-banner">
+                    <img src={`http://localhost:8888/uploads/${event.picture}`} />
+                    <div className="absolute bottom-0 text-white bg-[#AA7C52] p-5">
+                      <div className="font-medium text-sm leading-7 tracking-[1px] text-white">{moment(event.date).format(`ddd, MMM Do 'YY, h:mm A`)}</div>
+                      <div className="font-semibold text-xl leading-7 tracking-[2px] text-white">{event.event}</div>
+                      <div className="top-[-20px] absolute z-50">
+                        <div>
+                          <img src={viewers} />
+                        </div>
                       </div>
                     </div>
-                  </React.Fragment>
+                  </div>
+                </Link>
                 )
               })}
+              {eventCategories.length < 1 && (
+                <div className="text-center font-bold text-3xl">No data</div>
+              )}
             </div>
           </div>
         </div>
