@@ -335,7 +335,7 @@ button#signup-btn, button#signin-btn {
 .event-banner {
   border-radius: 32px;
   overflow: hidden;
-  min-width: 300px;
+  width: 300px;
 
   height: 350px;
   position: relative;
@@ -343,7 +343,7 @@ button#signup-btn, button#signin-btn {
 }
 .event-banner > img {
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: cover;
 }
 .event-banner > .banner-text {
@@ -556,6 +556,11 @@ button#signup-btn, button#signin-btn {
 }
 
 
+#categories-list::-webkit-scrollbar {
+  display: none;
+}
+
+
 @media screen and (min-width: 320px ) {
   
 }
@@ -676,3 +681,4 @@ button#signup-btn, button#signin-btn {
     max-width: 100%;
   }
 }
+
