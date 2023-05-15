@@ -1,23 +1,25 @@
-import { Link } from "react-router-dom";
-import {FcGoogle} from "react-icons/fc";
-import {FaFacebook} from "react-icons/fa";
-import { useNavigate} from "react-router-dom";
-import http from "../helpers/http";
-import React from "react";
-import { Formik } from "formik";
-import * as Yup from "yup";
-import propTypes from "prop-types";
-import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom"
+import {FcGoogle} from "react-icons/fc"
+import {FaFacebook} from "react-icons/fa"
+import { useNavigate} from "react-router-dom"
+// import http from "../helpers/http"
+import React from "react"
+import { Formik } from "formik"
+import * as Yup from "yup"
+import propTypes from "prop-types"
+import { useDispatch, useSelector } from "react-redux"
 
-import { clearMessage, login, setErrorMessage } from "../redux/reducers/auth"
+import { clearMessage } from "../redux/reducers/auth"
+
+import { asyncLoginAction } from "../redux/actions/auth"
 
 //IMAGES
 import peopleBg from "../assets/images/picture.png"
 import weTick from "../assets/images/wetick-logo.png"
 
 const validationSchema = Yup.object({
-  email: Yup.string().email('Email is invalid'),
-  password: Yup.string().required('Password is invalid')
+  email: Yup.string().email("Email is invalid"),
+  password: Yup.string().required("Password is invalid")
 })
 
 const FormLogin = ({values, errors, touched, handleBlur, handleChange, handleSubmit, isSubmitting}) => {
@@ -39,7 +41,7 @@ const FormLogin = ({values, errors, touched, handleBlur, handleChange, handleSub
       </div>
       <div className="form-control">
         <input 
-          className={`input input-bordered border-1 w-full ${errors.email && touched.email && 'input-error'}`} 
+          className={`input input-bordered border-1 w-full ${errors.email && touched.email && "input-error"}`} 
           type="email" 
           name="email" 
           placeholder="Email" 
@@ -48,17 +50,17 @@ const FormLogin = ({values, errors, touched, handleBlur, handleChange, handleSub
           value={values.email} 
         />
         {errors.email && touched.email && (
-            <label className="label">
-              <span className="label-text-alt text-error"></span>
-              <span className="label-text-alt text-error">{errors.email}</span>
-            </label>
+          <label className="label">
+            <span className="label-text-alt text-error"></span>
+            <span className="label-text-alt text-error">{errors.email}</span>
+          </label>
         )}
 
       </div>
 
       <div className="form-control">
         <input 
-          className={`input input-bordered border-1 w-full ${errors.password && touched.password && 'input-error'}`} 
+          className={`input input-bordered border-1 w-full ${errors.password && touched.password && "input-error"}`} 
           type="password" 
           name="password" 
           placeholder="Password" 
@@ -67,10 +69,10 @@ const FormLogin = ({values, errors, touched, handleBlur, handleChange, handleSub
           value={values.password} 
         />
         {errors.password && touched.password && (
-            <label className="label">
-              <span className="label-text-alt text-error"></span>
-              <span className="label-text-alt text-error">{errors.password}</span>
-            </label>
+          <label className="label">
+            <span className="label-text-alt text-error"></span>
+            <span className="label-text-alt text-error">{errors.password}</span>
+          </label>
         )}
 
       </div>
@@ -110,6 +112,7 @@ const Login = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const token = useSelector(state => state.auth.token)
+  const formError = useSelector(state => state.auth.token)
   
   
 
@@ -122,25 +125,30 @@ const Login = () => {
 
   const doLogin = async (values, {setSubmitting, setErrors}) => {
     dispatch(clearMessage())
-    try{
-      const {email, password} = values
-      const body = new URLSearchParams({email, password}).toString() //mengambil query string
-      const {data} = await http().post('/auth/login', body)
-      dispatch(login(data.results.token))
-      setSubmitting(false)
-    }catch (err) {
-      const message = err?.response?.data?.message
-      if(message){
-        if(err?.response?.data?.results){
-          setErrors({
-            email: err.response.data.results.filter(item => param === "email")[0].message,
-            password: err.response.data.results.filter(item => param === "password")[0].message
-          })
-        }else{
-          dispatch(setErrorMessage(message))
-        }
-      } 
+    dispatch(asyncLoginAction(values))
+    if(formError.length){
+      setErrors({
+        email: formError.filter(item => param === "email")[0].message,
+        password: formError.filter(item => param === "password")[0].message
+      })
     }
+    setSubmitting(false)
+    // try{
+
+    //   setSubmitting(false)
+    // }catch (err) {
+    //   const message = err?.response?.data?.message
+    //   if(message){
+    //     if(err?.response?.data?.results){
+    //       setErrors({
+    //         email: err.response.data.results.filter(item => param === "email")[0].message,
+    //         password: err.response.data.results.filter(item => param === "password")[0].message
+    //       })
+    //     }else{
+    //       dispatch(setErrorMessage(message))
+    //     }
+    //   } 
+    // }
   }
   
   return(
@@ -163,8 +171,8 @@ const Login = () => {
         </Link>
         <Formik
           initialValues={{
-            email: '',
-            password: ''
+            email: "",
+            password: ""
           }}
           validationSchema={validationSchema}
           onSubmit={doLogin}
@@ -178,4 +186,4 @@ const Login = () => {
   )
   
 }
-export default Login;
+export default Login

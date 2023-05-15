@@ -1,11 +1,10 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import http from "../helpers/http";
+import React from "react"
+import { Link } from "react-router-dom"
+import { useDispatch, useSelector } from "react-redux"
+import http from "../helpers/http"
 
-import { setWarningMessage } from "../redux/reducers/auth";
 
-import { logout as logoutAction} from "../redux/reducers/auth"; 
+import { logout as logoutAction} from "../redux/reducers/auth" 
 
 //IMAGES
 import weTick from "../assets/images/wetick-logo.png"
@@ -15,19 +14,18 @@ import igGrey from "../assets/images/ig-grey.svg"
 import twitterGrey from "../assets/images/twitter-grey.svg"
 
 //ICONS
-import { FiAlignJustify } from "react-icons/fi";
-import { FiUser } from "react-icons/fi";
-import { FiCreditCard } from "react-icons/fi";
-import { FiEdit3 } from "react-icons/fi";
-import { FiCheckSquare } from "react-icons/fi";
-import { FiHeart } from "react-icons/fi";
-import { FiSettings } from "react-icons/fi";
-import { FiLogOut } from "react-icons/fi";
-import { FiUnlock } from "react-icons/fi";
+import { FiAlignJustify } from "react-icons/fi"
+import { FiUser } from "react-icons/fi"
+import { FiCreditCard } from "react-icons/fi"
+import { FiEdit3 } from "react-icons/fi"
+import { FiCheckSquare } from "react-icons/fi"
+import { FiHeart } from "react-icons/fi"
+import { FiSettings } from "react-icons/fi"
+import { FiLogOut } from "react-icons/fi"
+import { FiUnlock } from "react-icons/fi"
 
 
 const Profile = () => {
-  const navigate = useNavigate()
   const dispatch = useDispatch()
   const token = useSelector(state => state.auth.token)
   const [profiles, setProfile] = React.useState({})
@@ -35,10 +33,10 @@ const Profile = () => {
   
   React.useEffect(()=>{
     async function getProfileData(){
-      const {data} = await http(token).get('/profile')
+      const {data} = await http(token).get("/profile")
       setProfile(data.results)
     }
-      getProfileData()
+    getProfileData()
   }, [])
   // React.useEffect(()=>{
   //   const getProfileData = async () => {
@@ -48,16 +46,9 @@ const Profile = () => {
   //     getProfileData()
   // }, [])
 
-  React.useEffect(()=> {
-    if(!token){
-      dispatch(setWarningMessage('You have to login first'))
-      navigate('/login')
-    }
-  }, [token])
-
   const doLogout = ()=> {
     dispatch(logoutAction())
-    navigate('/login')
+
   }
 
   
@@ -84,37 +75,37 @@ const Profile = () => {
           </div>
           <div id="menu" className="hidden md:flex md:flex-row  flex-col flex-1 w-full md:w-[unset] items-center justify-between font-semibold text-sm leading-5">
             <ul className="flex md:flex-row flex-col text-center gap-5 w-full justify-center">
-              <li className="flex justify-center items-center min-w-[100px]"><a className="hover:text-[#FFBA7B]" href="home.html">Home</a></li>
-              <li className="flex justify-center items-center min-w-[100px]"><a className="hover:text-[#FFBA7B]" href="create-event.html">Create Event</a></li>
-              <li className="flex justify-center items-center min-w-[100px]"><a className="hover:text-[#FFBA7B]" href="event.html">Location</a></li>
+              <li className="flex justify-center items-center min-w-[100px]"><Link className="hover:text-[#FFBA7B]" to={"/"}>Home</Link></li>
+              <li className="flex justify-center items-center min-w-[100px]"><Link className="hover:text-[#FFBA7B]" to="/manage-event">Create Event</Link></li>
+              <li className="flex justify-center items-center min-w-[100px]"><a className="hover:text-[#FFBA7B]" href="#location">Location</a></li>
             </ul>
             <div className="flex md:flex-row flex-col gap-3 w-full md:w-[unset]">
               {token ?
-              <div className="flex gap-5">
+                <div className="flex gap-5">
 
                   <Link to="/profile" className="flex items-center gap-5 font-semibold text-sm leading-5">
                     <div className="inline-block border-transparent rounded-full p-[2px] bg-gradient-to-r from-[#9E91AE] to-[#450206]">
-                      {profiles?.picture && <img className="border-[3.38px] border-white object-cover w-[50px] h-[50px] rounded-full" src={`http://localhost:8888/uploads/${profiles.picture}`}
-                        alt="profile"/>}
+                      {profiles?.picture && <img className="border-[3.38px] border-white object-cover w-[50px] h-[50px] rounded-full" src={profiles.picture.startsWith("https")? profiles.picture : `http://localhost:8888/uploads/${profiles.picture}`}
+                        alt={profiles?.fullName}/>}
                     </div>
                     <div className="font-semibold text-sm leading-5">
                       <div>{profiles?.fullName}</div>
                     </div>
                   </Link>
                 
-                <button onClick={doLogout} className="btn btn-primary">Log Out</button>
-              </div>
-              :
-              <div className="flex gap-3">
-                <div className="w-full">
-                  <Link className="text-[#38291B] hover:text-white hover:bg-[#38291B] w-full min-w-[120px] inline-block text-center py-2 font-bold rounded"
-                    to="/login">Login</Link>
+                  <button onClick={doLogout} className="btn btn-primary">Log Out</button>
                 </div>
-                <div className="w-full">
-                  <Link className="bg-[#AA7C52] hover:bg-[#FFBA7B] w-full min-w-[120px] inline-block text-center py-2 text-white hover:text-[#38291B] font-bold rounded"
-                    to="/signup">Sign Up</Link>
+                :
+                <div className="flex gap-3">
+                  <div className="w-full">
+                    <Link className="text-[#38291B] hover:text-white hover:bg-[#38291B] w-full min-w-[120px] inline-block text-center py-2 font-bold rounded"
+                      to="/login">Login</Link>
+                  </div>
+                  <div className="w-full">
+                    <Link className="bg-[#AA7C52] hover:bg-[#FFBA7B] w-full min-w-[120px] inline-block text-center py-2 text-white hover:text-[#38291B] font-bold rounded"
+                      to="/signup">Sign Up</Link>
+                  </div>
                 </div>
-              </div>
               }
             </div>
           </div>
@@ -127,7 +118,7 @@ const Profile = () => {
               <div
                 className="inline-block border-transparent rounded-full p-[2px] bg-gradient-to-r from-[#9E91AE] to-[#450206]">
                 {profiles.picture && <img className="border-[3.38px] border-white object-cover w-11 h-11 rounded-full"
-                  src={`http://localhost:8888/uploads/${profiles.picture}`} alt="profile"/>}
+                  src={profiles.picture.startsWith("https")? profiles.picture : `http://localhost:8888/uploads/${profiles.picture}`} alt={profiles?.picture}/>}
               </div>
             </div>
             <div>
@@ -413,8 +404,8 @@ const Profile = () => {
                   <div>
                     <div className="flex items-center justify-center">
                       <div className="inline-block border-transparent rounded-full p-[2px] bg-gradient-to-r from-[#9E91AE] to-[#450206]">
-                        <img className="border-[3.38px] border-white object-cover w-[110px] h-[110px] rounded-full"
-                          src={`http://localhost:8888/uploads/${profiles.picture}`} alt="profile"/>
+                        {profiles.picture && <img className="border-[3.38px] border-white object-cover w-[110px] h-[110px] rounded-full"
+                          src={profiles.picture.startsWith("https")? profiles.picture : `http://localhost:8888/uploads/${profiles.picture}`} alt={profiles?.picture}/>}
                       </div>
                     </div>
                   </div>
@@ -507,4 +498,4 @@ const Profile = () => {
     </>
   )
 }
-export default Profile;
+export default Profile

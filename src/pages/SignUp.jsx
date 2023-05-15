@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router-dom"
 
 //IMAGES
 import peopleBg from "../assets/images/picture.png"
@@ -61,4 +61,4 @@ const SignUp = () => {
   
   )
 }
-export default SignUp;
+export default SignUp

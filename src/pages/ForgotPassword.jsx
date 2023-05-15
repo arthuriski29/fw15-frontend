@@ -1,5 +1,5 @@
 //IMAGES
-import { Link } from "react-router-dom";
+import { Link } from "react-router-dom"
 import peopleBg from "../assets/images/picture.png"
 import weTick from "../assets/images/wetick-logo.png"
 
@@ -43,4 +43,4 @@ const ForgotPassword = () => {
   
   )
 }
-export default ForgotPassword;
+export default ForgotPassword
