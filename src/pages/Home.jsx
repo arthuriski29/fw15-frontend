@@ -126,7 +126,7 @@ const Home = () => {
             </div>
           </div>
           <div id="menu" className="hidden md:flex md:flex-row  flex-col flex-1 w-full md:w-[unset] items-center justify-between font-semibold text-sm leading-5">
-            <ul className="flex md:flex-row flex-col text-center gap-5 w-full justify-center">
+            <ul className="flex md:flex-row flex-col text-center gap-5 w-[80%] justify-center">
               <li className="flex justify-center items-center min-w-[100px]"><Link className="hover:text-[#FFBA7B]" to={"/"}>Home</Link></li>
               <li className="flex justify-center items-center min-w-[100px]"><Link className="hover:text-[#FFBA7B]" to="/manage-event">Create Event</Link></li>
               <li className="flex justify-center items-center min-w-[100px]"><a className="hover:text-[#FFBA7B]" href="#location">Location</a></li>
@@ -134,12 +134,12 @@ const Home = () => {
             <div className="flex md:flex-row flex-col gap-3 w-full md:w-[unset]">
               {token ? 
                 <div className="flex gap-5">
-                  <Link to="/profile" className="flex items-center gap-5 font-semibold text-sm leading-5">
-                    <div className="p-[2px] border-transparent rounded-full bg-gradient-to-r from-[#9E91AE] to-[#450206]">
+                  <Link to="/profile" className="flex items-center w-full h-full gap-5 font-semibold text-sm leading-5">
+                    <div className="p-[2px] border-transparent rounded-full w-13 h-13 bg-gradient-to-r from-[#9E91AE] to-[#450206]">
                       {profile.picture && <img className="border-[3.38px] border-white object-cover w-11 h-11 rounded-full"
                         src={profile.picture.startsWith("https")? profile?.picture : `http://localhost:8888/uploads/${profile?.picture}`} alt={profile?.fullName}/>}
                     </div>
-                    <div className="font-semibold text-sm leading-5">
+                    <div className="flex-1 font-semibold text-sm leading-5">
                       <div>{profile?.fullName}</div>
                     </div>
                   </Link>
