@@ -76,7 +76,7 @@ const Home = () => {
       const fallback = (message)=> {
         dispatch(logoutAction())
         dispatch(setWarningMessage(message))
-        navigate("/login")
+        navigate("/sign-in")
       }
       const {data} = await http(token, fallback).get("/profile")
       setProfile(data.results)
@@ -90,16 +90,19 @@ const Home = () => {
       setCategories(data.results)
     }
     getCategories()
-  },[])
+  },[token, dispatch, navigate])
 
   const doLogout = ()=> {
     dispatch(logoutAction())
-    navigate("/login")
+    navigate("/sign-in")
   }
 
   const onSearch = (values)=> {
     const qs = new URLSearchParams(values).toString()
     navigate(`/search?${qs}`)
+  }
+  const doSearchCities = ()=> {
+    navigate("/search")
   }
 
   return(
@@ -146,7 +149,7 @@ const Home = () => {
                 <div className="flex gap-3">
                   <div className="w-full">
                     <Link className="text-[#38291B] hover:text-white hover:bg-[#38291B] w-full min-w-[120px] inline-block text-center py-2 font-bold rounded"
-                      to="/login">Login</Link>
+                      to="/sign-in">Login</Link>
                   </div>
                   <div className="w-full">
                     <Link className="bg-[#AA7C52] hover:bg-[#FFBA7B] w-full min-w-[120px] inline-block text-center py-2 text-white hover:text-[#38291B] font-bold rounded"
@@ -320,11 +323,11 @@ const Home = () => {
               })}
             </div>
             <div className="flex flex-col justify-center items-center">
-              <a href="event.html">
-                <button type="submit" className="w-[255px] h-[40px] bg-[#AA7C52] rounded-2xl text-center text-[#FFBA7B]">
+              {/* <a href="event.html"> */}
+              <button type="submit" className="w-[255px] h-[40px] bg-[#AA7C52] rounded-2xl text-center text-[#FFBA7B]" onClick={doSearchCities}>
                   See All
-                </button>
-              </a>
+              </button>
+              {/* </a> */}
             </div>
           </div>
         </div>
