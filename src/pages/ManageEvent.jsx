@@ -38,7 +38,7 @@ const ManageEvent = () => {
       const fallback = (message)=> {
         dispatch(logoutAction())
         dispatch(setWarningMessage(message))
-        navigate("/login")
+        navigate("/sign-in")
       }
       const {data} = await http(token, fallback).get("/profile")
       setProfile(data.results)
@@ -56,7 +56,7 @@ const ManageEvent = () => {
   }, [])
   const doLogout = ()=> {
     dispatch(logoutAction())
-    navigate("/login")
+    navigate("/sign-in")
   }
 
 
@@ -104,7 +104,7 @@ const ManageEvent = () => {
                 <div className="flex gap-3">
                   <div className="w-full">
                     <Link className="text-[#38291B] hover:text-white hover:bg-[#38291B] w-full min-w-[120px] inline-block text-center py-2 font-bold rounded"
-                      to="/login">Login</Link>
+                      to="/sign-in">Login</Link>
                   </div>
                   <div className="w-full">
                     <Link className="bg-[#AA7C52] hover:bg-[#FFBA7B] w-full min-w-[120px] inline-block text-center py-2 text-white hover:text-[#38291B] font-bold rounded"
@@ -188,10 +188,10 @@ const ManageEvent = () => {
               <div className="font-semibold text-xl leading-6">Manage Event</div>
               <div className="font-semibold text-xl leading-6">
                 {/* <a href="create-event.html" className="underline underline-offset-8 text-[#AA7C52]">Create </a> */}
-                <label htmlFor="my-modal" className="btn underline underline-offset-8 text-[#AA7C52]">Create</label>
+                <label htmlFor={`modal-create-${event.id}`} className="btn underline underline-offset-8 text-[#AA7C52]">Create</label>
 
                 
-                <input type="checkbox" id="my-modal" className="modal-toggle" />
+                <input type="checkbox" id={`modal-create-${event.id}`} className="modal-toggle" />
                 <div className="modal">
                   <div className="modal-box max-w-[35rem]">
 
@@ -254,8 +254,8 @@ const ManageEvent = () => {
                     <div className="flex gap-[25px] py-[25px] border-b-2 border-gray-800">
                       <div id="event-schedule-date">
                         <div className="date-1">
-                          <span id="date-number" className="font-semibold text-sm text-[#FFBA7B] leading-5">13</span>
-                          <span id="date-day" className="font-medium text-xs leading-4 text-[#C1C5D0]">Mon</span>
+                          <span id="date-number" className="font-semibold text-sm text-[#FFBA7B] leading-5">{moment(event.date).format("ddd")}</span>
+                          <span id="date-day" className="font-medium text-xs leading-4 text-[#C1C5D0]">{moment(event.date).format("DD")}</span>
                         </div>
                       </div>
                       <div>
@@ -267,8 +267,8 @@ const ManageEvent = () => {
                             <Link to={`/event-detail/${event.id}`}>
                               <label htmlFor={`detail-event-${event.id}`} className="text-[#AA7C52] underline underline-offset-2  ">Detail</label>
                             </Link>
-                            <label htmlFor="my-modal" className="text-[#AA7C52] underline underline-offset-2">Update</label>
-                            <input type="checkbox" id={`my-modal-update-${event.id}`} className="modal-toggle" />
+                            <label htmlFor={`modal-update-${event.id}`} className="text-[#AA7C52] underline underline-offset-2">Update</label>
+                            <input type="checkbox" id={`modal-update-${event.id}`} className="modal-toggle" />
                             <div className="modal">
                               <div className="modal-box max-w-[35rem]">
                                 <div className="flex flex-col gap-8">
