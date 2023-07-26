@@ -25,14 +25,23 @@ const validationSchema = Yup.object({
 const FormLogin = ({values, errors, touched, handleBlur, handleChange, handleSubmit, isSubmitting}) => {
   const errorMessage = useSelector(state => state.auth.errorMessage)
   const warningMessage = useSelector(state => state.auth.warningMessage)
+  const successMessage = useSelector(state => state.auth.successMessage)
   return (
     <form onSubmit={handleSubmit} className="w-[80%] flex flex-col gap-5">
       <div className="w-[80%] flex flex-col gap-5">
         <div className="text-3xl font-bold">Sign In</div>
         <div className="">Hi, Welcome back to Urticket! </div>
+        <div className="flex gap-2">
+          <span className="">Don&apos;t have any account?</span>
+          <Link className="font-semibold hover:text-secondary" to="/sign-up">SignUp</Link>
+        </div>
         {warningMessage && 
         (<div>
           <div className="alert alert-warning">{warningMessage}</div>
+        </div> )}
+        {successMessage && 
+        (<div>
+          <div className="alert alert-success">{successMessage}</div>
         </div> )}
         {errorMessage && 
         (<div>
@@ -128,8 +137,8 @@ const Login = () => {
     dispatch(asyncLoginAction(values))
     if(formError.length){
       setErrors({
-        email: formError.filter(item => param === "email")[0].message,
-        password: formError.filter(item => param === "password")[0].message
+        email: formError.filter(item => item.param === "email")[0].message,
+        password: formError.filter(item => item.param === "password")[0].message
       })
     }
     setSubmitting(false)
