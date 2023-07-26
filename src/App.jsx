@@ -7,10 +7,13 @@ import Home from "./pages/Home"
 import SearchResults from "./pages/SearchResults"
 import Details from "./pages/DetailEvent"
 import Profile from "./pages/Profile"
-import Login from "./pages/Login"
+import Login from "./pages/SignIn"
 import SignUp from "./pages/SignUp"
 import ForgotPassword from "./pages/ForgotPassword"
 import ManageEvent from "./pages/ManageEvent"
+import SelectSection from "./pages/SelectSection"
+import Payment from "./pages/Payment"
+import History from "./pages/History"
 
 import {store, persistor} from "./redux/store"
 import PrivateRoute from "./components/PrivateRoute"
@@ -34,12 +37,31 @@ const App = ()=> {
                 </PrivateRoute>
               } 
             />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
+            <Route path="/sign-in" element={<Login />} />
+            <Route path="/sign-up" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/manage-event" element={<ManageEvent />} />
-            
-          
+            <Route path="/select-section/:id" 
+              element={
+                <PrivateRoute>
+                  <SelectSection />
+                </PrivateRoute>
+              } 
+            />
+            <Route path="/payment" 
+              element={
+                <PrivateRoute>
+                  <Payment />
+                </PrivateRoute>
+              } 
+            />
+            <Route path="/history" 
+              element={
+                <PrivateRoute>
+                  <History />
+                </PrivateRoute>
+              } 
+            />
           </Routes>
         </BrowserRouter>
       </PersistGate>
