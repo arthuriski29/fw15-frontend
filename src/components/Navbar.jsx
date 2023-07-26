@@ -32,7 +32,7 @@ const Navbar = (props)=>{
 
   const doLogout = ()=> {
     window.localStorage.removeItem("token")
-    navigate("/login")
+    navigate("/sign-in")
   }
 
   return (
