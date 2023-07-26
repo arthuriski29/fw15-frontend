@@ -128,7 +128,7 @@ const Home = () => {
           <div id="menu" className="hidden md:flex md:flex-row  flex-col flex-1 w-full md:w-[unset] items-center justify-between font-semibold text-sm leading-5">
             <ul className="flex md:flex-row flex-col text-center gap-5 w-[80%] justify-center">
               <li className="flex justify-center items-center min-w-[100px]"><Link className="hover:text-[#FFBA7B]" to={"/"}>Home</Link></li>
-              <li className="flex justify-center items-center min-w-[100px]"><Link className="hover:text-[#FFBA7B]" to="/manage-event">Create Event</Link></li>
+              <li className="flex justify-center items-center min-w-[100px]"><Link className="hover:text-[#FFBA7B]" to={"/manage-event"}>Create Event</Link></li>
               <li className="flex justify-center items-center min-w-[100px]"><a className="hover:text-[#FFBA7B]" href="#location">Location</a></li>
             </ul>
             <div className="flex md:flex-row flex-col gap-3 w-full md:w-[unset]">
@@ -163,21 +163,21 @@ const Home = () => {
         <section className="flex md:flex-row flex-col flex-1 md:px-24 py-10 items-center bg-[#AA7C52] bg-cover bg-no-repeat bg-[url('assets/images/background-circle.svg')] ]">
           <div className="flex-1 flex flex-col gap-5">
             <p className="font-semibold text-xl text-[#000] text-center md:text-6xl max-w-[554px] leading-[96px] ">Find events you love with our</p>
-            <div className="block w-full">
+            <div className="">
               <div className="flex rounded-[20px] bg-white h-[75px]">
                 <Formik initialValues={
                   {search: "", city: ""}
                 } onSubmit={onSearch}>
                   {({handleBlur, handleChange, handleSubmit}) =>(
-                    <form onSubmit={handleSubmit}>
-                      <span className="flex flex-1 justify-between items-center border-0  py-[15px] pl-[25px] pr-0">
+                    <form className= "w-full text-[17px]" onSubmit={handleSubmit}>
+                      <div className="flex justify-between items-center border-0  py-[15px] pl-[25px] pr-0">
                         <i><FiSearch /></i>
                         <div className="form-control">
-                          <input onChange={handleChange} onBlur={handleBlur} className="font-medium text-xs leading-4" name="search" type="text" placeholder="Search Event..." />
+                          <input onChange={handleChange} onBlur={handleBlur} className="font-medium leading-4" name="search" type="text" placeholder="Search Event..." />
                         </div>
                         <i><FiMapPin /></i>
                         <div className="form-control">
-                          <select onChange={handleChange} onBlur={handleBlur} name="city" className="outline-none px-3 appearance-none font-medium text-xs md:min-w-[200px] leading-4">
+                          <select onChange={handleChange} onBlur={handleBlur} name="city" className="outline-none px-3 appearance-none font-medium md:min-w-[200px] leading-4">
                             <option disabled="" selected="">Where?</option>
                             {cities.map(city => {
                               return (
@@ -194,7 +194,7 @@ const Home = () => {
                           </span>
                         </button>
 
-                      </span>
+                      </div>
                     </form>
                   )}
                 </Formik>
@@ -220,14 +220,14 @@ const Home = () => {
             </div>
           </div>
           <div className="flex justify-between w-[100%]">
-            <div id="event-date-layout" className="flex inline-block flex-1 h-[75px] md:gap-[20px] gap-[10px]">
+            <div id="event-date-layout" className="flex flex-1 h-[75px] md:gap-[20px] gap-[10px]">
               <div className="w-[45px] h-full rounded-[10px] flex justify-center items-center">
                 <span className="rounded-[10px] w-[45px] h-[45px] p-[10px] shadow-[0_2px_15px_rgba(26,60,68,0.08)]">
                   <i><FiArrowLeft/></i>
                 </span>
               </div>
               <div className="md:max-w-full max-w-[150px] overflow-x-auto">
-                <div className="flex inline-block gap-[25px]">
+                <div className="flex gap-[25px]">
                   <div className="flex flex-col justify-center items-center w-[50px] h-[75px] text-[#E4C5AA]">
                     <span className="font-semibold text-sm leading-5 tracking-[0.00039375px]">13</span>
                     <span>Mon</span>
@@ -261,7 +261,7 @@ const Home = () => {
             </div>
             <div className="flex items-center">
               <div className="w-[100px] h-[50px] bg-[#E4C5AA] rounded-[15px] md:flex justify-center items-center">
-                <span className="flex inline-block gap-[17px] py-[16px]">
+                <span className="flex gap-[17px] py-[16px]">
                   <img src={dateIcon} alt="date-icon" />
                   <p className="py-[3px] font-medium text-xs leading-4 tracking-[1px] ">March</p>
                 </span>
@@ -289,7 +289,7 @@ const Home = () => {
             })}
           </div>
           <div className="below-banner-arrow">
-            <div className="left-arrow">
+            <div className="left-arrow shadow">
               <i><FiArrowLeft/></i>
             </div>
             <div className="right-arrow">
