@@ -1,6 +1,8 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
+import { Formik, Field } from "formik"
+import moment from "moment"
 import http from "../helpers/http"
 
 
@@ -12,6 +14,7 @@ import fbGrey from "../assets/images/fb-grey.svg"
 import whatsappGrey from "../assets/images/whatsapp-grey.svg"
 import igGrey from "../assets/images/ig-grey.svg"
 import twitterGrey from "../assets/images/twitter-grey.svg"
+import defaultProfile from "../assets/images/default-profile.jpg"
 
 //ICONS
 import { FiAlignJustify } from "react-icons/fi"
@@ -23,28 +26,78 @@ import { FiHeart } from "react-icons/fi"
 import { FiSettings } from "react-icons/fi"
 import { FiLogOut } from "react-icons/fi"
 import { FiUnlock } from "react-icons/fi"
+import {AiOutlineLoading3Quarters} from "react-icons/ai"
 
 
 const Profile = () => {
   const dispatch = useDispatch()
   const token = useSelector(state => state.auth.token)
   const [profiles, setProfile] = React.useState({})
+  const [editUsername, setEditUsername] = React.useState(false)
+  const [editEmail, setEditEmail] = React.useState(false)
+  const [editPhoneNumber, setEditPhoneNumber] = React.useState(false)
+  const [editBirthDate, setEditBirthDate] = React.useState(false)
+  const [selectedPicture, setSelectedPicture] = React.useState(false)
+  const [openModal, setOpenModal] = React.useState(false)
+  const [pictureURI, setPictureURI] = React.useState("")
 
+
+  
   
   React.useEffect(()=>{
     async function getProfileData(){
       const {data} = await http(token).get("/profile")
       setProfile(data.results)
-    }
+    }  
     getProfileData()
   }, [])
-  // React.useEffect(()=>{
-  //   const getProfileData = async () => {
-  //     const {data} = await http(token).get('/profile')
-  //     setProfile(data.results)
-  //   }
-  //     getProfileData()
-  // }, [])
+
+  React.useEffect(()=>{
+    console.log(selectedPicture)
+  }, [selectedPicture])
+
+  const fileToDataUrl = (file) => {
+    const reader = new FileReader()
+    reader.addEventListener("load", ()=> {
+      setPictureURI(reader.result)
+    })
+    reader.readAsDataURL (file)
+  }
+
+  const changePicture = (e)=> {
+    const file = e.target.files[0]
+    setSelectedPicture(file)
+    fileToDataUrl(file)
+  }
+
+  const editProfile = async (values) => {
+    setOpenModal(true)
+    const form = new FormData()
+    Object.keys(values).forEach((key)=>{
+      if(values[key]){
+        if(key === "birthDate"){
+          form.append(key, moment(values[key], "DD-MM-YYYY").format("YYYY/MM/DD"))
+        }else{
+          form.append(key, values[key])
+        }
+      }
+    })
+    if(selectedPicture){
+      form.append("picture", selectedPicture)
+    }
+    const {data} = await http(token).patch("/profile", form, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    })
+    setProfile(data.results)
+    setEditBirthDate(false)
+    setEditEmail(false)
+    setEditPhoneNumber(false)
+    setEditUsername(false)
+    setSelectedPicture(false)
+    setOpenModal(false)
+  }
 
   const doLogout = ()=> {
     dispatch(logoutAction())
@@ -99,7 +152,7 @@ const Profile = () => {
                 <div className="flex gap-3">
                   <div className="w-full">
                     <Link className="text-[#38291B] hover:text-white hover:bg-[#38291B] w-full min-w-[120px] inline-block text-center py-2 font-bold rounded"
-                      to="/login">Login</Link>
+                      to="/sign-in">Login</Link>
                   </div>
                   <div className="w-full">
                     <Link className="bg-[#AA7C52] hover:bg-[#FFBA7B] w-full min-w-[120px] inline-block text-center py-2 text-white hover:text-[#38291B] font-bold rounded"
@@ -143,285 +196,356 @@ const Profile = () => {
         <div id="profile-tab" className="flex my-12 mx-[70px]">
           <div id="profile-tab-wrap" className="px-[50px] py-[46px] rounded-[30px] bg-[#DED6C6]">
             <div className="mb-[50px] font-semibold text-xl leading-6">Profile</div>
-            <div className="flex gap-[50px] font-normal text-sm leading-5">
-              <div id="profile-list" className="flex flex-col w-[468px]">
-                <form className="w-full flex flex-col gap-[50px]">
-                  <div id="name" className="flex gap-8">
-                    <label htmlFor="name" className="w-[130px] py-[5px]">Name</label>
-                    <div className="w-[213px] h-[30px] rounded-[12.5px] pl-[10px] bg-[#fff] py-[3px]">
-                      <input type="text" id="name-input" placeholder={profiles.fullName}/>
+            <Formik
+              initialValues = {{
+                fullName: profiles?.fullName,
+                username: profiles?.username,
+                email: profiles?.email,
+                phoneNumber: profiles?.phoneNumber,
+                gender: profiles?.gender ? "1" : "0",
+                profession: profiles?.profession,
+                nationality: profiles?.nationality,
+                birthDate: profiles?.birthDate && moment(profiles?.birthDate).format("YYYY-MM-DD")
+              }}
+              onSubmit = {editProfile}
+              enableReinitialize = {true}
+            >
+              {({handleSubmit, handleChange, handleBlur, errors, touched, values}) => (
+                <form onSubmit={handleSubmit} className="flex gap-[50px] font-normal text-sm leading-5">
+                  <div id="profile-list" className="flex flex-col w-[468px]">
+                    <div className="w-full flex flex-col gap-[50px]">
+                      <div id="name" className="flex gap-8">
+                        <label htmlFor="name" className="w-[130px] py-[5px]">Name</label>
+                        <div className="w-full h-[30px] rounded-[12.5px] pl-[10px] bg-[#fff] py-[3px] flex-1">
+                          <input name="fullName" onChange={handleChange} onBlur={handleBlur} value={values?.fullName} type="text" id="name-input" placeholder={profiles?.fullName}/>
+                        </div>
+                      </div>
+                      <div id="username" className="flex gap-8">
+                        <label htmlFor="username" className="w-[130px] py-[5px]">Username</label>
+                        <div className="w-full h-[30px] pl-[10px] py-[3px] flex flex-1 gap-5">
+                          
+                          {!editUsername && <span>{profiles?.username === null ? <span className="text-secondary">Not Set</span>: profiles?.username}</span>}
+                          {editUsername && <input className="bg-[#fff] rounded-[12.5px]" name="username" onChange={handleChange} onBlur={handleBlur} value={values?.username} type="text" id="username-input" placeholder={`@${profiles?.username}`.toLowerCase()} /> }
+                          
+                          {!editUsername && <div>
+                            <button onClick={() => setEditUsername(true)} type="button" className="text-accent hover:text-secondary font-bold">Edit</button>
+                          </div>}
+                        </div>
+                      </div>
+                      <div id="email" className="flex gap-8">
+                        <label htmlFor="email" className="w-[130px] py-[5px]">Email</label>
+                        <div className="w-full h-[30px] pl-[10px] py-[3px] flex flex-1 gap-5">
+                          <div>
+                            {!editEmail && <span>{profiles?.email === null ? <span className="text-secondary">Not Set</span>: profiles?.email}</span>}
+                            {editEmail && <input className="bg-[#fff] rounded-[12.5px]" name="email" onChange={handleChange} onBlur={handleBlur} value={values?.email} type="text" id="email-input" placeholder={`${profiles?.email}`.toLowerCase()} /> }
+                          </div>
+                          <div>
+                            <button onClick={() => setEditEmail(true)} type="button" className="text-accent hover:text-secondary font-bold">Edit</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="phoneNumber" className="flex gap-8">
+                        <label htmlFor="phoneNumber" className="w-[130px] py-[5px]">PhoneNumber</label>
+                        <div className="w-full h-[30px] pl-[10px] py-[3px] flex flex-1 gap-5">
+                          <div>
+                            {!editPhoneNumber && <span>{profiles?.phoneNumber === null ? <span className="text-secondary">Not Set</span>: profiles?.phoneNumber}</span>}
+                            {editPhoneNumber && <input className="bg-[#fff] rounded-[12.5px]" name="phoneNumber" onChange={handleChange} onBlur={handleBlur} value={values?.phoneNumber} type="text" id="phone-input" placeholder={`@${profiles?.phoneNumber}`.toLowerCase()} /> }
+                          </div>
+                          
+                          <div>
+                            <button onClick={() => setEditPhoneNumber(true)} type="button" className="text-accent hover:text-secondary font-bold">Edit</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="gender" className="flex gap-8">
+                        <div htmlFor="gender" className="w-[130px] py-[2px]">Gender</div>
+                        <label className="flex gap-2 items-center">
+                          <Field type="radio" name="gender" id="gender-male" className="radio radio-accent" value="0"/>
+                          <span>Male</span>
+                        </label>
+                        <label className="flex gap-2 items-center">
+                          <Field type="radio" name="gender" id="gender-female" className="radio radio-accent" value="1"/>
+                          <span>Female</span>
+                        </label>
+                      </div>
+                      <div id="profession" className="flex gap-8">
+                        <label htmlFor="profession" className="w-[130px] py-[2px]">Profession</label>
+                        <select className="w-[213px]" name="profession" value={values?.profession} onChange={handleChange} onBlur={handleBlur} id="profession-select">
+                          <option value= "" disabled selected>Select Profession</option>
+                          <option value="Entrepreneur">Entrepreneur</option>
+                          <option value="Artist">Artist</option>
+                          <option value="Business Analyst">Business Analyst</option>
+                          <option value="Construction Worker">Construction Worker</option>
+                          <option value="Designer">Designer</option>
+                          <option value="Entrepreneur">Entrepreneur</option>
+                          <option value="Freelancer">Freelancer</option>
+                          <option value="Social Worker">Social Worker</option>
+                          <option value="Elite Wrestler">Elite Wrestler</option>
+                          <option value="Football Player">Football Player</option>
+                        </select>
+                      </div>
+                      <div id="nationality" className="flex gap-8">
+                        <label htmlFor="nationality" className="w-[130px] py-[2px]" >Nationality</label>
+                        <select id="nationality-select" name="nationality" value={values?.nationality} onChange={handleChange} onBlur={handleBlur}>
+                          <option value="" disabled selected>Select Country</option>
+                          <option value="afghanistan">Afghanistan</option>
+                          <option value="albania">Albania</option>
+                          <option value="algeria">Algeria</option>
+                          <option value="andorra">Andorra</option>
+                          <option value="angola">Angola</option>
+                          <option value="antigua">Antigua</option>
+                          <option value="argentina">Argentina</option>
+                          <option value="armenia">Armenian</option>
+                          <option value="australia">Australia</option>
+                          <option value="austria">Austria</option>
+                          <option value="azerbaijan">Azerbaijan</option>
+                          <option value="bahama">Bahama</option>
+                          <option value="bahrain">Bahrain</option>
+                          <option value="bangladesh">Bangladesh</option>
+                          <option value="barbados">Barbados</option>
+                          <option value="barbuda">Barbuda</option>
+                          <option value="belarusia">Belarusia</option>
+                          <option value="belgia">Belgia</option>
+                          <option value="belize">Belize</option>
+                          <option value="benin">Benin</option>
+                          <option value="bhutan">Bhutan</option>
+                          <option value="bolivia">Bolivia</option>
+                          <option value="bosnia">Bosnia</option>
+                          <option value="botswana">Botswana</option>
+                          <option value="brazil">Brazil</option>
+                          <option value="brunei">Brunei</option>
+                          <option value="bulgaria">Bulgaria</option>
+                          <option value="burkina faso">Burkina Faso</option>
+                          <option value="burma">Burma</option>
+                          <option value="burundi">Burundi</option>
+                          <option value="cambodia">Cambodia</option>
+                          <option value="cameroon">Cameroon</option>
+                          <option value="canada">Canada</option>
+                          <option value="cape verde">Cape Verde</option>
+                          <option value="central african">Central African</option>
+                          <option value="chad">Chad</option>
+                          <option value="chile">Chile</option>
+                          <option value="china">China</option>
+                          <option value="colombia">Colombia</option>
+                          <option value="comoros">Comoros</option>
+                          <option value="congo">Congo</option>
+                          <option value="costa rica">Costa Rica</option>
+                          <option value="croatia">Croatia</option>
+                          <option value="cuba">Cuba</option>
+                          <option value="cyprus">Cyprus</option>
+                          <option value="czech">Czech</option>
+                          <option value="denmark">Denmark</option>
+                          <option value="djibouti">Djibouti</option>
+                          <option value="dominica">Dominica</option>
+                          <option value="ecuador">Ecuador</option>
+                          <option value="egypt">Egypt</option>
+                          <option value="el salvador">El Salvador</option>
+                          <option value="equatorial guinea">Equatorial Guinea</option>
+                          <option value="eritrea">Eritrea</option>
+                          <option value="estonia">Estonia</option>
+                          <option value="eswatini">Eswatini</option>
+                          <option value="ethiopia">Ethiopia</option>
+                          <option value="fiji">Fiji</option>
+                          <option value="finland">Finland</option>
+                          <option value="france">France</option>
+                          <option value="gabon">Gabon</option>
+                          <option value="gambia">Gambia</option>
+                          <option value="georgia">Georgia</option>
+                          <option value="germany">Germany</option>
+                          <option value="ghana">Ghana</option>
+                          <option value="greece">Greece</option>
+                          <option value="grenada">Grenada</option>
+                          <option value="guatemala">Guatemala</option>
+                          <option value="guinea-bissau">Guinea-Bissau</option>
+                          <option value="guinea">Guinea</option>
+                          <option value="guyana">Guyana</option>
+                          <option value="haiti">Haiti</option>
+                          <option value="herzegovina">Herzegovina</option>
+                          <option value="honduras">Honduras</option>
+                          <option value="hungary">Hungary</option>
+                          <option value="iceland">Iceland</option>
+                          <option value="india">India</option>
+                          <option value="indonesia">Indonesia</option>
+                          <option value="iran">Iran</option>
+                          <option value="iraq">Iraq</option>
+                          <option value="ireland">Ireland</option>
+                          <option value="israel">Israel</option>
+                          <option value="italyn">Italy</option>
+                          <option value="ivory coast">Ivory Coast</option>
+                          <option value="jamaica">Jamaica</option>
+                          <option value="japan">Japan</option>
+                          <option value="jordan">Jordan</option>
+                          <option value="kazakhstan">Kazakhstan</option>
+                          <option value="kenya">Kenya</option>
+                          <option value="kuwait">Kuwait</option>
+                          <option value="kyrgyztan">Kyrgyztan</option>
+                          <option value="laos">Laos</option>
+                          <option value="latvia">Latvia</option>
+                          <option value="lebanon">Lebanon</option>
+                          <option value="lesotho">Lesotho</option>
+                          <option value="liberia">Liberia</option>
+                          <option value="libya">Libya</option>
+                          <option value="liechtenstein">Liechtenstein</option>
+                          <option value="lithuania">Lithuania</option>
+                          <option value="luxembourg">Luxembourg</option>
+                          <option value="macedonia">Macedonia</option>
+                          <option value="madagascar">Madagascar</option>
+                          <option value="malawi">Malawi</option>
+                          <option value="malaysia">Malaysia</option>
+                          <option value="maldives">Maldives</option>
+                          <option value="mali">Mali</option>
+                          <option value="malta">Malta</option>
+                          <option value="marshall islands">Marshall Islands</option>
+                          <option value="mauritania">Mauritania</option>
+                          <option value="mauritius">Mauritius</option>
+                          <option value="mexico">Mexico</option>
+                          <option value="micronesia">Micronesia</option>
+                          <option value="moldova">Moldova</option>
+                          <option value="monaco">Monaco</option>
+                          <option value="mongolia">Mongolia</option>
+                          <option value="morocco">Morocco</option>
+                          <option value="mozambique">Mozambique</option>
+                          <option value="namibia">Namibia</option>
+                          <option value="nauru">Nauru</option>
+                          <option value="nepal">Nepal</option>
+                          <option value="netherlands">Netherlands</option>
+                          <option value="new zealand">New Zealand</option>
+                          <option value="nicaragua">Nicaragua</option>
+                          <option value="nigeria">Nigeria</option>
+                          <option value="north korea">North Korea</option>
+                          <option value="northern ireland">Northern Ireland</option>
+                          <option value="norwegia">Norwegia</option>
+                          <option value="oman">Oman</option>
+                          <option value="pakistan">Pakistan</option>
+                          <option value="palau">Palau</option>
+                          <option value="panama">Panama</option>
+                          <option value="papua new guinea">Papua New Guinea</option>
+                          <option value="paraguay">Paraguay</option>
+                          <option value="peru">Peru</option>
+                          <option value="phillipines">Phillipines</option>
+                          <option value="poland">Poland</option>
+                          <option value="portugal">Portugal</option>
+                          <option value="qatar">Qatar</option>
+                          <option value="romania">Romania</option>
+                          <option value="russia">Russia</option>
+                          <option value="rwanda">Rwanda</option>
+                          <option value="saint kitts and nevis">Saint Kitts and Nevis</option>
+                          <option value="saint lucia">Saint Lucia</option>
+                          <option value="samoa">Samoa</option>
+                          <option value="san marino">San Marino</option>
+                          <option value="sao tome and principe">Sao Tome and Principe</option>
+                          <option value="saudi arabia">Saudi Arabia</option>
+                          <option value="scotland">Scotland</option>
+                          <option value="senegal">Senegal</option>
+                          <option value="serbia">Serbia</option>
+                          <option value="seychelles">Seychelles</option>
+                          <option value="sierra leone">Sierra Leone</option>
+                          <option value="singapore">Singapore</option>
+                          <option value="slovakia">Slovakia</option>
+                          <option value="slovenia">Slovenia</option>
+                          <option value="solomon island">Solomon Island</option>
+                          <option value="somalia">Somalia</option>
+                          <option value="south africa">South Africa</option>
+                          <option value="south korea">South Korea</option>
+                          <option value="spain">Spain</option>
+                          <option value="sri lanka">Sri Lanka</option>
+                          <option value="sudan">Sudan</option>
+                          <option value="suriname">Suriname</option>
+                          <option value="sweden">Sweden</option>
+                          <option value="swiss">Swiss</option>
+                          <option value="syria">Syria</option>
+                          <option value="taiwan">Taiwan</option>
+                          <option value="tajikistan">Tajikistan</option>
+                          <option value="tanzania">Tanzania</option>
+                          <option value="thailand">Thailand</option>
+                          <option value="timor leste">Timor Leste</option>
+                          <option value="togo">Togo</option>
+                          <option value="tonga">Tonga</option>
+                          <option value="trinidad and tobago">Trinidad and Tobago</option>
+                          <option value="tunisia">Tunisia</option>
+                          <option value="turkey">Turkey</option>
+                          <option value="tuvalu">Tuvalu</option>
+                          <option value="uganda">Uganda</option>
+                          <option value="ukraine">Ukraine</option>
+                          <option value="united arab emirates">United Arab Emirates</option>
+                          <option value="united kingdom">United Kingdom</option>
+                          <option value="united states">United States</option>
+                          <option value="uruguay">Uruguay</option>
+                          <option value="uzbekistan">Uzbekistan</option>
+                          <option value="vanuatu">Vanuatu</option>
+                          <option value="venezuela">Venezuela</option>
+                          <option value="vietnam">Vietnam</option>
+                          <option value="wales">Wales</option>
+                          <option value="yemen">Yemen</option>
+                          <option value="zambia">Zambia</option>
+                          <option value="zimbabwe">Zimbabwe</option>
+                        </select>
+                      </div>
+                      <div id="birthDate" className="flex gap-8">
+                        <label htmlFor="birthDate" className="w-[130px] py-[5px]">Birth Date</label>
+                        <div className="w-full h-[30px] pl-[10px] py-[3px] flex flex-1 gap-5">
+                          <div>
+                            {!editBirthDate && <span>{profiles?.birthDate === null ? <span className="text-secondary">Not Set</span>: moment(profiles?.birthDate).format("DD / MM / YYYY")}</span>}
+                            {editBirthDate && <input className="bg-[#fff] rounded-[12.5px]" name="birthDate" onChange={handleChange} onBlur={handleBlur} value={values?.birthDate} type="date" id="birthday-select" /> }
+                          </div>
+                          <div>
+                            <button onClick={() => setEditBirthDate(true)} type="button" className="text-accent hover:text-secondary font-bold">Edit</button>
+                          </div>
+                        </div>
+                      </div>
+                      {/* <div id="birthday-date" className="flex gap-8">
+                        <label htmlFor="birthday" className="w-[130px] py-[2px]">Birthday Date</label>
+                        <input className="bg-[#DED6C6]" type="date" id="birthday-select" value="2023-06-03"/>
+                        <button className="butn btn-accent">Edit</button>
+                      </div> */}
+                      <button id="profile-save-button" type="submit" className="my-[50px] mt-[50px] border-none rounded-2xl px-[20px] shadow-[0px_8px_10px_#38291B] bg-yellow-700 text-orange-300 font-bold no-underline w-full h-10">Save</button>
                     </div>
                   </div>
-                  <div id="username" className="flex gap-8">
-                    <label htmlFor="username" className="w-[130px] py-[5px]">Username</label>
-                    <div className="h-[30px] pl-[10px]  py-[3px]">
-                      <input className="bg-[#DED6C6]" type="text" id="username-input" placeholder={`@${profiles.fullName}`.toLowerCase()} />
-                    </div>
-                    <a href="#">Edit</a>
-                  </div>
-                  <div id="email" className="flex gap-8">
-                    <label htmlFor="email" className="w-[130px] py-[2px]">Email</label>
-                    <div className="h-[30px] pl-[10px]  py-[3px]">
-                      <input className="bg-[#DED6C6]" type="email" id="email-input" placeholder={profiles.email} />
-                    </div>
-                    <a href="#">Edit</a>
-                  </div>
-                  <div id="phone-number" className="flex gap-8">
-                    <label htmlFor="phone-number" className="w-[130px] py-[2px]">Phone Number</label>
-                    <div className="h-[30px] pl-[10px]  py-[3px]">
-                      <input className="bg-[#DED6C6]" type="tel" id="phone-input" placeholder="+62xx.." />
-                    </div>
-                    <a href="#">Edit</a>
-                  </div>
-                  <div id="gender" className="flex gap-8">
-                    <label htmlFor="gender" className="w-[130px] py-[2px]">Gender</label>
-                    <input type="radio" name="gender" id="gender-male" value="Male"/><label htmlFor="gender-1">Male</label>
-                    <input type="radio" name="gender" id="gender-female" value="Female"/><label htmlFor="gender-2">Female</label>
-                  </div>
-                  <div id="profession" className="flex gap-8">
-                    <label htmlFor="profession" className="w-[130px] py-[2px]">Profession</label>
-                    <select className="w-[213px]" id="profession-select">
-                      <option value="" disabled selected>Entrepreneur</option>
-                      <option value="1">Artist</option>
-                      <option value="2">Business Analyst</option>
-                      <option value="3">Construction Worker</option>
-                      <option value="4">Designer</option>
-                      <option value="5">Entrepreneur</option>
-                      <option value="6">Freelancer</option>
-                      <option value="7">Social Worker</option>
-                      <option value="8">Elite Wrestler</option>
-                      <option value="9">Football Player</option>
-                    </select>
-                  </div>
-                  <div id="nationality" className="flex gap-8">
-                    <label htmlFor="nationality" className="w-[130px] py-[2px]">Nationality</label>
-                    <select id="nationality-select">
-                      <option value="" disabled selected>Indonesia</option>
-                      <option value="afghanistan">Afghanistan</option>
-                      <option value="albania">Albania</option>
-                      <option value="algeria">Algeria</option>
-                      <option value="american">American</option>
-                      <option value="andorra">Andorra</option>
-                      <option value="angola">Angola</option>
-                      <option value="antigua">Antigua</option>
-                      <option value="argentina">Argentina</option>
-                      <option value="armenia">Armenian]</option>
-                      <option value="australia">Australia</option>
-                      <option value="austria">Austria</option>
-                      <option value="azerbaijan">Azerbaijan</option>
-                      <option value="bahama">Bahama</option>
-                      <option value="bahrain">Bahrain</option>
-                      <option value="bangladesh">Bangladesh</option>
-                      <option value="barbados">Barbados</option>
-                      <option value="barbuda">Barbuda</option>
-                      <option value="belarusia">Belarusia</option>
-                      <option value="belgia">Belgia</option>
-                      <option value="belize">Belize</option>
-                      <option value="benin">Benin</option>
-                      <option value="bhutan">Bhutan</option>
-                      <option value="bolivia">Bolivia</option>
-                      <option value="bosnia">Bosnia</option>
-                      <option value="botswana">Botswana</option>
-                      <option value="brazil">Brazil</option>
-                      <option value="brunei">Brunei</option>
-                      <option value="bulgaria">Bulgaria</option>
-                      <option value="burkina faso">Burkina Faso</option>
-                      <option value="burma">Burma</option>
-                      <option value="burundi">Burundi</option>
-                      <option value="cambodia">Cambodia</option>
-                      <option value="cameroon">Cameroon</option>
-                      <option value="canada">Canada</option>
-                      <option value="cape verde">Cape Verde</option>
-                      <option value="central african">Central African</option>
-                      <option value="chadian">Chadian</option>
-                      <option value="chilean">Chilean</option>
-                      <option value="chinese">Chinese</option>
-                      <option value="colombian">Colombian</option>
-                      <option value="comoran">Comoran</option>
-                      <option value="congolese">Congolese</option>
-                      <option value="costa rican">Costa Rican</option>
-                      <option value="croatian">Croatian</option>
-                      <option value="cuban">Cuban</option>
-                      <option value="cypriot">Cypriot</option>
-                      <option value="czech">Czech</option>
-                      <option value="danish">Danish</option>
-                      <option value="djibouti">Djibouti</option>
-                      <option value="dominican">Dominican</option>
-                      <option value="dutch">Dutch</option>
-                      <option value="east timorese">East Timorese</option>
-                      <option value="ecuadorean">Ecuadorean</option>
-                      <option value="egyptian">Egyptian</option>
-                      <option value="emirian">Emirian</option>
-                      <option value="england">England</option>
-                      <option value="equatorial guinean">Equatorial Guinean</option>
-                      <option value="eritrean">Eritrean</option>
-                      <option value="estonian">Estonian</option>
-                      <option value="ethiopian">Ethiopian</option>
-                      <option value="fijian">Fijian</option>
-                      <option value="filipino">Filipino</option>
-                      <option value="finnish">Finnish</option>
-                      <option value="french">French</option>
-                      <option value="gabonese">Gabonese</option>
-                      <option value="gambian">Gambian</option>
-                      <option value="georgian">Georgian</option>
-                      <option value="german">German</option>
-                      <option value="ghanaian">Ghanaian</option>
-                      <option value="greek">Greek</option>
-                      <option value="grenadian">Grenadian</option>
-                      <option value="guatemalan">Guatemalan</option>
-                      <option value="guinea-bissauan">Guinea-Bissauan</option>
-                      <option value="guinean">Guinean</option>
-                      <option value="guyanese">Guyanese</option>
-                      <option value="haitian">Haitian</option>
-                      <option value="herzegovinian">Herzegovinian</option>
-                      <option value="honduran">Honduran</option>
-                      <option value="hungarian">Hungarian</option>
-                      <option value="icelander">Icelander</option>
-                      <option value="indian">Indian</option>
-                      <option value="indonesian">Indonesian</option>
-                      <option value="iranian">Iranian</option>
-                      <option value="iraqi">Iraqi</option>
-                      <option value="irish">Irish</option>
-                      <option value="israeli">Israeli</option>
-                      <option value="italian">Italian</option>
-                      <option value="ivorian">Ivorian</option>
-                      <option value="jamaican">Jamaican</option>
-                      <option value="japanese">Japanese</option>
-                      <option value="jordanian">Jordanian</option>
-                      <option value="kazakhstani">Kazakhstani</option>
-                      <option value="kenyan">Kenyan</option>
-                      <option value="kittian and nevisian">Kittian and Nevisian</option>
-                      <option value="kuwaiti">Kuwaiti</option>
-                      <option value="kyrgyz">Kyrgyz</option>
-                      <option value="laotian">Laotian</option>
-                      <option value="latvian">Latvian</option>
-                      <option value="lebanese">Lebanese</option>
-                      <option value="liberian">Liberian</option>
-                      <option value="libyan">Libyan</option>
-                      <option value="liechtensteiner">Liechtensteiner</option>
-                      <option value="lithuanian">Lithuanian</option>
-                      <option value="luxembourger">Luxembourger</option>
-                      <option value="macedonian">Macedonian</option>
-                      <option value="malagasy">Malagasy</option>
-                      <option value="malawian">Malawian</option>
-                      <option value="malaysian">Malaysian</option>
-                      <option value="maldivan">Maldivan</option>
-                      <option value="malian">Malian</option>
-                      <option value="maltese">Maltese</option>
-                      <option value="marshallese">Marshallese</option>
-                      <option value="mauritanian">Mauritanian</option>
-                      <option value="mauritian">Mauritian</option>
-                      <option value="mexican">Mexican</option>
-                      <option value="micronesian">Micronesian</option>
-                      <option value="moldovan">Moldovan</option>
-                      <option value="monacan">Monacan</option>
-                      <option value="mongolian">Mongolian</option>
-                      <option value="moroccan">Moroccan</option>
-                      <option value="mosotho">Mosotho</option>
-                      <option value="motswana">Motswana</option>
-                      <option value="mozambican">Mozambican</option>
-                      <option value="namibian">Namibian</option>
-                      <option value="nauruan">Nauruan</option>
-                      <option value="nepalese">Nepalese</option>
-                      <option value="new zealander">New Zealander</option>
-                      <option value="ni-vanuatu">Ni-Vanuatu</option>
-                      <option value="nicaraguan">Nicaraguan</option>
-                      <option value="nigerien">Nigerien</option>
-                      <option value="north korean">North Korean</option>
-                      <option value="northern irish">Northern Irish</option>
-                      <option value="norwegian">Norwegian</option>
-                      <option value="omani">Omani</option>
-                      <option value="pakistani">Pakistani</option>
-                      <option value="palauan">Palauan</option>
-                      <option value="panamanian">Panamanian</option>
-                      <option value="papua new guinean">Papua New Guinean</option>
-                      <option value="paraguayan">Paraguayan</option>
-                      <option value="peruvian">Peruvian</option>
-                      <option value="polish">Polish</option>
-                      <option value="portuguese">Portuguese</option>
-                      <option value="qatari">Qatari</option>
-                      <option value="romanian">Romanian</option>
-                      <option value="russian">Russian</option>
-                      <option value="rwandan">Rwandan</option>
-                      <option value="saint lucian">Saint Lucian</option>
-                      <option value="salvadoran">Salvadoran</option>
-                      <option value="samoan">Samoan</option>
-                      <option value="san marinese">San Marinese</option>
-                      <option value="sao tomean">Sao Tomean</option>
-                      <option value="saudi">Saudi</option>
-                      <option value="scottish">Scottish</option>
-                      <option value="senegalese">Senegalese</option>
-                      <option value="serbian">Serbian</option>
-                      <option value="seychellois">Seychellois</option>
-                      <option value="sierra leonean">Sierra Leonean</option>
-                      <option value="singaporean">Singaporean</option>
-                      <option value="slovakian">Slovakian</option>
-                      <option value="slovenian">Slovenian</option>
-                      <option value="solomon islander">Solomon Islander</option>
-                      <option value="somali">Somali</option>
-                      <option value="south african">South African</option>
-                      <option value="south korean">South Korean</option>
-                      <option value="spanish">Spanish</option>
-                      <option value="sri lankan">Sri Lankan</option>
-                      <option value="sudanese">Sudanese</option>
-                      <option value="surinamer">Surinamer</option>
-                      <option value="swazi">Swazi</option>
-                      <option value="swedish">Swedish</option>
-                      <option value="swiss">Swiss</option>
-                      <option value="syrian">Syrian</option>
-                      <option value="taiwanese">Taiwanese</option>
-                      <option value="tajik">Tajik</option>
-                      <option value="tanzanian">Tanzanian</option>
-                      <option value="thai">Thai</option>
-                      <option value="togolese">Togolese</option>
-                      <option value="tongan">Tongan</option>
-                      <option value="trinidadian or tobagonian">Trinidadian or Tobagonian</option>
-                      <option value="tunisian">Tunisian</option>
-                      <option value="turkish">Turkish</option>
-                      <option value="tuvaluan">Tuvaluan</option>
-                      <option value="ugandan">Ugandan</option>
-                      <option value="ukrainian">Ukrainian</option>
-                      <option value="uruguayan">Uruguayan</option>
-                      <option value="uzbekistani">Uzbekistani</option>
-                      <option value="venezuelan">Venezuelan</option>
-                      <option value="vietnamese">Vietnamese</option>
-                      <option value="welsh">Welsh</option>
-                      <option value="yemenite">Yemenite</option>
-                      <option value="zambian">Zambian</option>
-                      <option value="zimbabwean">Zimbabwean</option>
-                    </select>
-                  </div>
-                  <div id="birthday-date" className="flex gap-8">
-                    <label htmlFor="birthday" className="w-[130px] py-[2px]">Birthday Date</label>
-                    <input className="bg-[#DED6C6]" type="date" id="birthday-select" value="2023-06-03"/>
-                    <a href="#">Edit</a>
-                  </div>
-                  <button id="profile-save-button" type="submit" className="my-[50px] mt-[50px] border-none rounded-2xl px-[20px] shadow-[0px_8px_10px_#38291B] bg-yellow-700 text-orange-300 font-bold no-underline w-full h-10">Save</button>
-                </form>
-              </div>
-              <div id="profile-user-picture">
-                <div className="flex flex-col border-l-2 pl-[25px]">
-                  <div>
-                    <div className="flex items-center justify-center">
-                      <div className="inline-block border-transparent rounded-full p-[2px] bg-gradient-to-r from-[#9E91AE] to-[#450206]">
-                        {profiles.picture && <img className="border-[3.38px] border-white object-cover w-[110px] h-[110px] rounded-full"
-                          src={profiles.picture.startsWith("https")? profiles.picture : `http://localhost:8888/uploads/${profiles.picture}`} alt={profiles?.picture}/>}
+                  <div id="profile-user-picture">
+                    <div className="flex flex-col border-l-2 pl-[25px]">
+                      <div>
+                        <div className="flex items-center justify-center">
+                          <div className="inline-block border-transparent rounded-full p-[2px] bg-gradient-to-r from-[#9E91AE] to-[#450206]">
+                            {
+                              !selectedPicture && <img className="border-[3.38px] border-white object-cover w-[110px] h-[110px] rounded-full"
+                                src={
+                                  profiles?.picture?.startsWith("https")? 
+                                    profiles?.picture : (
+                                      profiles?.picture === null ? 
+                                        defaultProfile :
+                                        `http://localhost:8888/uploads/${profiles?.picture}`
+                                    )
+                                } 
+                                alt={profiles?.picture}/>
+                            }
+                            {
+                              selectedPicture && 
+                              <div className="w-full h-full relative">
+                                <img className="border-[3.38px] border-white object-cover w-[110px] h-[110px] rounded-full" src={pictureURI} alt={profiles?.picture}/>
+                                <div className="absolute top-0 left-0 bg-[#A87B51] opacity-50 w-full h-full rounded-full text-white flex justify-center items-center">File Selected</div>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        {/* <button id="profile-choose-photo-button" type="submit" className="mt-[50px] border-none rounded-2xl px-[20px] shadow-[0px_8px_10px_#38291B] bg-yellow-700 text-orange-300 font-bold no-underline w-full h-10">Choose Photo</button> */}
+                        <label className="btn btn-accent mt-[50px] border-none rounded-2xl px-[20px] shadow-[0px_8px_10px_#38291B] bg-yellow-700 text-orange-300 font-bold no-underline w-full h-8">
+                          <span>Choose Photo</span>
+                          <input type="file" name="picture" onChange={changePicture} className="hidden"/>
+                        </label>
+                      </div>
+                      <div className="mt-[50px]">
+                        <ul>
+                          <li>Image size: max, 2 MB</li>
+                          <li>Image formats: .JPG, .JPEG, .PNG</li>
+                        </ul>
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <button id="profile-choose-photo-button" type="submit" className="mt-[50px] border-none rounded-2xl px-[20px] shadow-[0px_8px_10px_#38291B] bg-yellow-700 text-orange-300 font-bold no-underline w-full h-10">Choose Photo</button>
-                  </div>
-                  <div className="mt-[50px]">
-                    <ul>
-                      <li>Image size: max, 2 MB</li>
-                      <li>Image formats: .JPG, .JPEG, .PNG</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              
-            </div>
+                </form>
+              )}
+            </Formik>
           </div>
         </div>
       </main>
@@ -489,12 +613,17 @@ const Profile = () => {
         </div>
 
       </footer>
-      {/* <div className="flex justify-center items-center flex-col h-screen">
-        <div className="text-9xl">Profile</div>
-        <div>{profiles?.fullName}</div>
-        <div>{profiles?.email}</div>
-        <Link className="btn btn-primary" to="/">Go to Home</Link>
-      </div> */}
+      <div>
+        <input type="checkbox" id="loading" className="modal-toggle" checked={openModal}/>
+        <div className="modal">
+          <div className="modal-box bg-transparent shadow-none">
+            <div className="flex justify-center items-center gap-2">
+              <AiOutlineLoading3Quarters className="animate-spin text-primary" size={25} />
+              <div className="font-extrabold text-brown-400">Uploading Data...</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   )
 }
