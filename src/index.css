@@ -350,7 +350,8 @@ button#signup-btn, button#signin-btn {
   position: absolute;
   bottom: 0;
   color: white;
-  background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.5) 75%, #000 1%);
+  background: rgb(0,0,0);
+  background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8687850140056023) 26%, rgba(0,0,0,0.7399334733893557) 43%, rgba(255,255,255,0) 100%);
   padding: 20px;
 }
 .event-banner > .banner-text > .banner-text-first {
