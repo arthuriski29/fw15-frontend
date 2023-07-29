@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 import React from "react"
 import http from "../helpers/http"
 import { useNavigate } from "react-router-dom"
@@ -13,6 +13,7 @@ import fbGrey from "../assets/images/fb-grey.svg"
 import whatsappGrey from "../assets/images/whatsapp-grey.svg"
 import igGrey from "../assets/images/ig-grey.svg"
 import twitterGrey from "../assets/images/twitter-grey.svg"
+import defaultProfile from "../assets/images/default-profile.jpg"
 
 //ICONS
 import { FiAlignJustify } from "react-icons/fi"
@@ -24,14 +25,24 @@ import { FiHeart } from "react-icons/fi"
 import { FiSettings } from "react-icons/fi"
 import { FiLogOut } from "react-icons/fi"
 import { FiUnlock } from "react-icons/fi"
+import { Formik } from "formik"
+import { AiOutlineLoading3Quarters } from "react-icons/ai"
 
 
 const ManageEvent = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const { id } = useParams()
   const token = useSelector(state => state.auth.token)
   const [profile, setProfile] = React.useState({})
   const [events, setEvents] = React.useState([])
+
+  const [eventParam, setEventParam] = React.useState([])
+
+
+  const [selectedPicture, setSelectedPicture] = React.useState(false)
+  const [openModal, setOpenModal] = React.useState(false)
+  const [pictureURI, setPictureURI] = React.useState("")
 
   React.useEffect(()=> {
     async function getProfileData(){
@@ -49,14 +60,88 @@ const ManageEvent = () => {
     }
 
     async function getDataEvents(){
-      const {data} = await http().get("/events")
+      const {data} = await http(token).get("/events/manage")
+      // console.log(data)
       setEvents(data.results)
     }
     getDataEvents()
-  }, [])
+  }, [token])
+
+
+  const createEvent = async () => {
+    try {
+      const {data} = await http(token).post("/events/manage")
+      console.log(data)
+      setEvents(data.results)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+
+  const handleSaveButton = (paramEventId, source) => {
+    console.log(paramEventId, source)
+    setEventParam(paramEventId)
+  }
+
+  const updateEvent = async (values) => {
+    setOpenModal(true)
+    const form = new FormData()
+    Object.keys(values).forEach((key)=>{
+      if(values[key]){
+        form.append(key, values[key])
+      }
+    })
+    console.log(values)
+    if(selectedPicture){
+      form.append("picture", selectedPicture)
+    }
+    try {
+      const {data} = await http(token).patch(`/events/manage/${eventParam}`, form, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      })
+      console.log(data)
+      setEvents(data.results)// title, location, place, categoryId, date
+      setOpenModal(false)
+      // navigate("/")
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const deleteEvent = async (paramEventId, source) => {
+    console.log(paramEventId, source)
+    setEventParam(paramEventId)
+    try {
+      console.log(eventParam)
+      const {data} = await http(token).delete(`/events/manage/${eventParam}`)
+      console.log(data)
+      // const message = data.results.message
+      // console.log(message)  
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const fileToDataUrl = (file) => {
+    const reader = new FileReader()
+    reader.addEventListener("load", ()=> {
+      setPictureURI(reader.result)
+    })
+    reader.readAsDataURL (file)
+  }
+
+  const changePicture = (e)=> {
+    const file = e.target.files[0]
+    setSelectedPicture(file)
+    fileToDataUrl(file)
+  }
+
   const doLogout = ()=> {
     dispatch(logoutAction())
-    navigate("/sign-in")
+    navigate(`/event-detail/${id}`)
   }
 
 
@@ -188,10 +273,109 @@ const ManageEvent = () => {
               <div className="font-semibold text-xl leading-6">Manage Event</div>
               <div className="font-semibold text-xl leading-6">
                 {/* <a href="create-event.html" className="underline underline-offset-8 text-[#AA7C52]">Create </a> */}
-                <label htmlFor={`modal-create-${event.id}`} className="btn underline underline-offset-8 text-[#AA7C52]">Create</label>
+                <label onClick={()=> {handleSaveButton(event.id, "update")}} htmlFor="my_modal_6" className="btn underline underline-offset-8 text-[#AA7C52]">Create</label>
+                <input type="checkbox" id="my_modal_6" className="modal-toggle" />
+                <div className="modal">
+                  <Formik
+                    initialValues = {{ // title, location, place, categoryId, date
+                      title: events?.title,
+                      cityId: events?.location,
+                      categoryId: events?.categoryId,
+                      date: events?.date && moment(events?.date).format("YYYY-MM-DD"),
+                      descriptions:events?.descriptions
+                    }}
+                    onSubmit = {createEvent}
+                    enableReinitialize = {true}>
+                    {({handleSubmit, handleChange, handleBlur, values})=> {
+                      return (
+                        <form onSubmit={handleSubmit} className="modal-box max-w-[35rem]">
+                          <div className="flex flex-col gap-8">
+                            <div className="font-bold text-xl">Create Event</div>
+                            <form className="font-normal text-sm">
+                              <div className="flex flex-col gap-5">
+                                <div className="flex justify-between">
+                                  <div className="">
+                                    <div>
+                                      <div>Name</div>
+                                      <input className="input input-bordered w-full max-w-md"onChange={handleChange} onBlur={handleBlur} name="title" value={values?.title} placeholder={events.event} type="text" />
+                                    </div>
+                                    <div>
+                                      <div>Location</div>
+                                      <input className="input input-bordered w-full max-w-md"onChange={handleChange} onBlur={handleBlur} name="cityId" value={values?.cityId} placeholder={events.cityId} type="text" />
+                                    </div>
+                                    {/* <div>
+                                      <div>Price</div>
+                                      <input className="input input-bordered w-full max-w-md" placeholder="Input Price ..." type="text" />
+                                    </div> */}
+                                    <div>
+                                      <div>Category</div>
+                                      <input className="input input-bordered w-full max-w-md"onChange={handleChange} onBlur={handleBlur} name="categoryId" value={values?.categoryId} placeholder={events?.categoryId} type="text" />
+                                    </div>
+                                    <div>
+                                      <div>Date Time Show</div>
+                                      <input className="input input-bordered w-full max-w-md"onChange={handleChange} onBlur={handleBlur} name="date" value={values?.date} placeholder={events?.date} type="text" />
+                                    </div>
+                                  </div>
+                                  <div className="">
+                                    <div>
+                                      <label className="btn btn-accent mt-[50px] border-none rounded-2xl px-[20px] shadow-[0px_8px_10px_#38291B] bg-yellow-700 text-orange-300 font-bold no-underline w-full h-8">
+                                        <span>Choose Photo</span>
+                                        <input type="file" name="picture" onChange={changePicture} className="hidden"/>
+                                      </label>
+                                      {
+                                        !selectedPicture && <img className="border-[3.38px] border-white object-cover w-[110px] h-[110px] rounded-full"
+                                          src={
+                                            events?.picture?.startsWith("https")? 
+                                              events?.picture : (
+                                                events?.picture === null ? 
+                                                  defaultProfile :
+                                                  `http://localhost:8888/uploads/${events?.picture}`
+                                              )
+                                          } 
+                                          alt={events?.picture}/>
+                                      }
+                                      {
+                                        selectedPicture && 
+                                                    <div className="w-full h-full relative">
+                                                      <img className="border-[3.38px] border-white object-cover w-[110px] h-[110px] rounded-full" src={pictureURI} alt={events?.picture}/>
+                                                      <div className="absolute top-0 left-0 bg-[#A87B51] opacity-50 w-full h-full rounded-full text-white flex justify-center items-center">File Selected</div>
+                                                    </div>
+                                      }
+                                      {/* <div>Image</div>
+                                                  <input className="input input-bordered w-full max-w-md" name="picture"  placeholder="Chose File ..." type="text" /> */}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex justify-center items-center">
+                                  <div className="">
+                                    <div>description</div>
+                                    <input className="input input-bordered w-full max-w-md" name="descriptions" value={values.descriptions} onChange={handleChange} onBlur={handleBlur} placeholder={events.descriptions} type="text" />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex justify-between">
+                                <div className="modal-action">
+                                  <label htmlFor="my_modal_6" className="btn">Close</label>
+                                </div>
+                                <div className="modal-action">
+                                  <button type="submit" className="btn">Save</button>
+                                </div>
+                              </div>
+                            </form>
+
+                          </div>
+                        </form>
+                      )
+                    }}
+                  </Formik>
+                </div>
+
+
+
+                {/* <label htmlFor={"modal-create"} className="btn underline underline-offset-8 text-[#AA7C52]">Create</label>
 
                 
-                <input type="checkbox" id={`modal-create-${event.id}`} className="modal-toggle" />
+                <input type="checkbox" id={"modal-create"} className="modal-toggle" />
                 <div className="modal">
                   <div className="modal-box max-w-[35rem]">
 
@@ -244,7 +428,7 @@ const ManageEvent = () => {
                       <label htmlFor="my-modal" className="btn">Save</label>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
             <div className="overflow-auto" id="event-schedule">
@@ -267,59 +451,102 @@ const ManageEvent = () => {
                             <Link to={`/event-detail/${event.id}`}>
                               <label htmlFor={`detail-event-${event.id}`} className="text-[#AA7C52] underline underline-offset-2  ">Detail</label>
                             </Link>
-                            <label htmlFor={`modal-update-${event.id}`} className="text-[#AA7C52] underline underline-offset-2">Update</label>
-                            <input type="checkbox" id={`modal-update-${event.id}`} className="modal-toggle" />
+                            <label onClick={()=> {handleSaveButton(event.id, "update")}} htmlFor="my_modal_6" className="text-[#AA7C52] underline underline-offset-2">Update</label>
+                            <input type="checkbox" id="my_modal_6" className="modal-toggle" />
                             <div className="modal">
-                              <div className="modal-box max-w-[35rem]">
-                                <div className="flex flex-col gap-8">
-                                  <div className="font-bold text-xl">Update Event</div>
-                                  <form className="font-normal text-sm">
-                                    <div className="flex flex-col gap-5">
+                              <Formik
+                                initialValues = {{ // title, location, place, categoryId, date
+                                  title: events?.title,
+                                  cityId: events?.location,
+                                  categoryId: events?.categoryId,
+                                  date: events?.date && moment(events?.date).format("YYYY-MM-DD"),
+                                  descriptions:events?.descriptions
+                                }}
+                                onSubmit = {updateEvent}
+                                enableReinitialize = {true}>
+                                {({handleSubmit, handleChange, handleBlur, values})=> {
+                                  return (
+                                    <form onSubmit={handleSubmit} className="modal-box max-w-[35rem]">
+                                      <div className="flex flex-col gap-8">
+                                        <div className="font-bold text-xl">Update Event</div>
+                                        <div className="font-normal text-sm">
+                                          <div className="flex flex-col gap-5">
+                                            <div className="flex justify-between">
+                                              <div className="">
+                                                <div>
+                                                  <div>Name</div>
+                                                  <input className="input input-bordered w-full max-w-md"onChange={handleChange} onBlur={handleBlur} name="title" value={values?.title} placeholder={events.event} type="text" />
+                                                </div>
+                                                <div>
+                                                  <div>Location</div>
+                                                  <input className="input input-bordered w-full max-w-md"onChange={handleChange} onBlur={handleBlur} name="cityId" value={values?.cityId} placeholder={events.cityId} type="text" />
+                                                </div>
+                                                {/* <div>
+                                                  <div>Price</div>
+                                                  <input className="input input-bordered w-full max-w-md"onChange={handleChange} onBlur={handleBlur} name="price"  placeholder={events.price} type="text" />
+                                                </div> */}
+                                              </div>
+                                              <div className="">
+                                                <div>
+                                                  <div>Category</div>
+                                                  <input className="input input-bordered w-full max-w-md"onChange={handleChange} onBlur={handleBlur} name="categoryId" value={values?.categoryId} placeholder={events?.categoryId} type="text" />
+                                                </div>
+                                                <div>
+                                                  <div>Date Time Show</div>
+                                                  <input className="input input-bordered w-full max-w-md"onChange={handleChange} onBlur={handleBlur} name="date" value={values?.date} placeholder={events?.date} type="text" />
+                                                </div>
+                                                <div>
+                                                  <label className="btn btn-accent mt-[50px] border-none rounded-2xl px-[20px] shadow-[0px_8px_10px_#38291B] bg-yellow-700 text-orange-300 font-bold no-underline w-full h-8">
+                                                    <span>Choose Photo</span>
+                                                    <input type="file" name="picture" onChange={changePicture} className="hidden"/>
+                                                  </label>
+                                                  {
+                                                    !selectedPicture && <img className="border-[3.38px] border-white object-cover w-[110px] h-[110px] rounded-full"
+                                                      src={
+                                                        events?.picture?.startsWith("https")? 
+                                                          events?.picture : (
+                                                            events?.picture === null ? 
+                                                              defaultProfile :
+                                                              `http://localhost:8888/uploads/${events?.picture}`
+                                                          )
+                                                      } 
+                                                      alt={events?.picture}/>
+                                                  }
+                                                  {
+                                                    selectedPicture && 
+                                                    <div className="w-full h-full relative">
+                                                      <img className="border-[3.38px] border-white object-cover w-[110px] h-[110px] rounded-full" src={pictureURI} alt={events?.picture}/>
+                                                      <div className="absolute top-0 left-0 bg-[#A87B51] opacity-50 w-full h-full rounded-full text-white flex justify-center items-center">File Selected</div>
+                                                    </div>
+                                                  }
+                                                  {/* <div>Image</div>
+                                                  <input className="input input-bordered w-full max-w-md" name="picture"  placeholder="Chose File ..." type="text" /> */}
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div className="flex justify-center items-center">
+                                              <div className="">
+                                                <div>description</div>
+                                                <input className="input input-bordered w-full max-w-md" name="descriptions" value={values.descriptions} onChange={handleChange} onBlur={handleBlur} placeholder={events.descriptions} type="text" />
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
                                       <div className="flex justify-between">
-                                        <div className="">
-                                          <div>
-                                            <div>Name</div>
-                                            <input className="input input-bordered w-full max-w-md" placeholder="Input Name Event ..." type="text" />
-                                          </div>
-                                          <div>
-                                            <div>Location</div>
-                                            <input className="input input-bordered w-full max-w-md" placeholder="Select Location" type="text" />
-                                          </div>
-                                          <div>
-                                            <div>Price</div>
-                                            <input className="input input-bordered w-full max-w-md" placeholder="Input Price ..." type="text" />
-                                          </div>
+                                        <div className="modal-action">
+                                          <label htmlFor="my_modal_6" className="btn">Close</label>
                                         </div>
-                                        <div className="">
-                                          <div>
-                                            <div>Category</div>
-                                            <input className="input input-bordered w-full max-w-md" placeholder="Select Category" type="text" />
-                                          </div>
-                                          <div>
-                                            <div>Date Time Show</div>
-                                            <input className="input input-bordered w-full max-w-md" placeholder="01/01/2023" type="text" />
-                                          </div>
-                                          <div>
-                                            <div>Image</div>
-                                            <input className="input input-bordered w-full max-w-md" placeholder="Chose File ..." type="text" />
-                                          </div>
+                                        <div className="modal-action">
+                                          <button type="submit" className="btn">Save</button>
                                         </div>
                                       </div>
-                                      <div className="flex justify-center items-center">
-                                        <div className="">
-                                          <div>description</div>
-                                          <input className="input input-bordered w-full max-w-md" placeholder="Input Detail ..." type="text" />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </form>
-                                </div>
-                                <div className="modal-action">
-                                  <label htmlFor="my-modal" className="btn">Save</label>
-                                </div>
-                              </div>
+                                    </form>
+                                  )
+                                }}
+                              </Formik>
                             </div>
-                            <a href="#" className="text-[#AA7C52] underline underline-offset-2">Delete</a>
+                            <button onClick={()=>{deleteEvent(event.id, "delete")}} className="text-[#AA7C52] underline underline-offset-2">Delete</button>
                           </li>
                         </ul>
                       </div>
@@ -519,6 +746,17 @@ const ManageEvent = () => {
         </div>
 
       </footer>
+      <div>
+        <input type="checkbox" id="loading" className="modal-toggle" checked={openModal}/>
+        <div className="modal">
+          <div className="modal-box bg-transparent shadow-none">
+            <div className="flex justify-center items-center gap-2">
+              <AiOutlineLoading3Quarters className="animate-spin text-primary" size={25} />
+              <div className="font-extrabold text-brown-400">Uploading Data...</div>
+            </div>
+          </div>
+        </div>
+      </div>
       
     </>
   )
