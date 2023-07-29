@@ -13,7 +13,7 @@ import ForgotPassword from "./pages/ForgotPassword"
 import ManageEvent from "./pages/ManageEvent"
 import SelectSection from "./pages/SelectSection"
 import Payment from "./pages/Payment"
-import History from "./pages/History"
+import MyBooking from "./pages/MyBooking"
 
 import {store, persistor} from "./redux/store"
 import PrivateRoute from "./components/PrivateRoute"
@@ -55,10 +55,10 @@ const App = ()=> {
                 </PrivateRoute>
               } 
             />
-            <Route path="/history" 
+            <Route path="/mybooking" 
               element={
                 <PrivateRoute>
-                  <History />
+                  <MyBooking />
                 </PrivateRoute>
               } 
             />
