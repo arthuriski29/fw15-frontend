@@ -26,7 +26,8 @@ function Payment() {
   const token = useSelector(state => state.auth.token)
   const [profiles, setProfile] = React.useState({})
   const [methods, setMethods] = React.useState([])
-  const [selectedPayment, setSelectedPayment] = React.useState(null)
+  const [selectedPayment, setSelectedPayment] = React.useState("1")
+  console.log(selectedPayment)
 
   React.useEffect(()=>{
     async function getProfileData(){
@@ -34,7 +35,7 @@ function Payment() {
       setProfile(data.results)
     }  
     getProfileData()
-  }, [])
+  }, [token])
   React.useEffect(()=> {
     const getPaymentMethod = async()=> {
       const {data} = await http(token).get("/payment")
@@ -52,7 +53,7 @@ function Payment() {
     }).toString()
     const {data} = await http(token).post("/payment", form)
     console.log(data)
-    navigate("/history")
+    navigate("/mybooking")
   }
   const doLogout = ()=> {
     dispatch(logoutAction())
