@@ -210,7 +210,7 @@ const Profile = () => {
               onSubmit = {editProfile}
               enableReinitialize = {true}
             >
-              {({handleSubmit, handleChange, handleBlur, errors, touched, values}) => (
+              {({handleSubmit, handleChange, handleBlur, values}) => (
                 <form onSubmit={handleSubmit} className="flex gap-[50px] font-normal text-sm leading-5">
                   <div id="profile-list" className="flex flex-col w-[468px]">
                     <div className="w-full flex flex-col gap-[50px]">
