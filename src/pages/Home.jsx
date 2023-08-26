@@ -153,7 +153,7 @@ const Home = () => {
                   </div>
                   <div className="w-full">
                     <Link className="bg-[#AA7C52] hover:bg-[#FFBA7B] w-full min-w-[120px] inline-block text-center py-2 text-white hover:text-[#38291B] font-bold rounded"
-                      to="/signup">Sign Up</Link>
+                      to="/sign-up">Sign Up</Link>
                   </div>
                 </div>
               }
