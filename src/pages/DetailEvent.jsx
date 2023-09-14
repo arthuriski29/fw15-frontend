@@ -1,63 +1,97 @@
-import React from "react"
-import { Link } from "react-router-dom"
-import { useParams } from "react-router-dom"
-import http from "../helpers/http"
-import { useDispatch, useSelector } from "react-redux"
-import { logout as logoutAction} from "../redux/reducers/auth"
-import moment from "moment/moment"  
-
+import React from "react";
+import { Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import http from "../helpers/http";
+import { useDispatch, useSelector } from "react-redux";
+import { logout as logoutAction } from "../redux/reducers/auth";
+import moment from "moment/moment";
 
 //IMAGES
-import weTick from "../assets/images/wetick-logo.png"
-import viewers from "../assets/images/avatars.png"
-import mapLoc from "../assets/images/map-location.png"
-import fbGrey from "../assets/images/fb-grey.svg"
-import whatsappGrey from "../assets/images/whatsapp-grey.svg"
-import igGrey from "../assets/images/ig-grey.svg"
-import twitterGrey from "../assets/images/twitter-grey.svg"
+import weTick from "../assets/images/wetick-logo.png";
+import viewers from "../assets/images/avatars.png";
+import mapLoc from "../assets/images/map-location.png";
+import fbGrey from "../assets/images/fb-grey.svg";
+import whatsappGrey from "../assets/images/whatsapp-grey.svg";
+import igGrey from "../assets/images/ig-grey.svg";
+import twitterGrey from "../assets/images/twitter-grey.svg";
 
 //ICONS
-import { FiAlignJustify } from "react-icons/fi"
+import { FiAlignJustify } from "react-icons/fi";
 // import { FiUser } from "react-icons/fi"
 // import { FiCreditCard } from "react-icons/fi"
 // import { FiEdit3 } from "react-icons/fi"
 // import { FiCheckSquare } from "react-icons/fi"
-// import { FiHeart } from "react-icons/fi"
+import { FiHeart } from "react-icons/fi";
+import { FaHeart } from "react-icons/fa";
 // import { FiSettings } from "react-icons/fi"
 // import { FiLogOut } from "react-icons/fi"
 // import { FiUnlock } from "react-icons/fi"
 
 const Details = () => {
-  const dispatch = useDispatch()
-  const token = useSelector(state => state.auth.token)
-  const {id} = useParams()
-  const [profiles, setProfile] = React.useState({})
-  const [event, setEvent] = React.useState({})
-
-  React.useEffect(()=>{
-    async function getProfileData(){
-      const {data} = await http(token).get("/profile")
-      setProfile(data.results)
-    }  
-    getProfileData()
-  }, [])
+  const dispatch = useDispatch();
+  const token = useSelector((state) => state.auth.token);
+  const { id } = useParams();
+  const [profiles, setProfile] = React.useState({});
+  const [event, setEvent] = React.useState({});
+  const [wishlist, setWishlist] = React.useState(false);
 
   React.useEffect(() => {
-    const getEventData = async() => {
-      const {data} = await http().get(`/events/${id}`, )
-      setEvent(data.results)
+    async function getProfileData() {
+      const { data } = await http(token).get("/profile");
+      setProfile(data.results);
     }
-    if(id){
-      getEventData(id)
+    getProfileData();
+  }, []);
+
+  React.useEffect(() => {
+    const getEventData = async () => {
+      const { data } = await http().get(`/events/${id}`);
+      setEvent(data.results);
+    };
+    if (id) {
+      getEventData(id);
     }
-  }, [id])
+  }, [id]);
 
-  const doLogout = ()=> {
-    dispatch(logoutAction())
+  React.useEffect(() => {
+    const eventId = { eventId: id };
+    const qString = new URLSearchParams(eventId).toString();
+    const fetchData = async () => {
+      const { data } = await http(token).get(`/wishlist/check?${qString}`);
+      const btnStatus = data.results;
+      if (btnStatus === true) {
+        setWishlist(true);
+      } else {
+        setWishlist(false);
+      }
+    };
+    fetchData();
+  }, [token, id]);
 
-  }
-  
-  return(
+  const addRemoveWishlist = async () => {
+    try {
+      const eventId = { eventId: id };
+      const qString = new URLSearchParams(eventId).toString();
+      const { data } = await http(token).post("/wishlist", qString);
+      console.log(data);
+      if (wishlist) {
+        setWishlist(false);
+      } else {
+        setWishlist(true);
+      }
+    } catch (err) {
+      const message = err?.response?.data?.message;
+      if (message) {
+        console.log(message);
+      }
+    }
+  };
+
+  const doLogout = () => {
+    dispatch(logoutAction());
+  };
+
+  return (
     <>
       <header className="flex flex-col">
         <div className="flex md:flex-row flex-col justify-center md:justify-between items-center min-h-[3.5rem] px-8">
@@ -72,43 +106,85 @@ const Details = () => {
               </div>
             </div>
             <div className="md:hidden">
-              <button id="menu-toggler" className="border-2 border-black px-4 py-2 rounded-xl">
-                <i><FiAlignJustify /></i>
+              <button
+                id="menu-toggler"
+                className="border-2 border-black px-4 py-2 rounded-xl"
+              >
+                <i>
+                  <FiAlignJustify />
+                </i>
               </button>
             </div>
           </div>
-          <div id="menu" className="hidden md:flex md:flex-row  flex-col flex-1 w-full md:w-[unset] items-center justify-between font-semibold text-sm leading-5">
+          <div
+            id="menu"
+            className="hidden md:flex md:flex-row  flex-col flex-1 w-full md:w-[unset] items-center justify-between font-semibold text-sm leading-5"
+          >
             <ul className="flex md:flex-row flex-col text-center gap-5 w-full justify-center">
-              <li className="flex justify-center items-center min-w-[100px]"><Link className="hover:text-[#FFBA7B]" to="/" >Home</Link></li>
-              <li className="flex justify-center items-center min-w-[100px]"><Link className="hover:text-[#FFBA7B]" to="/" >Create Event</Link></li>
-              <li className="flex justify-center items-center min-w-[100px]"><Link className="hover:text-[#FFBA7B]" to="/" >Location</Link></li>
+              <li className="flex justify-center items-center min-w-[100px]">
+                <Link className="hover:text-[#FFBA7B]" to="/">
+                  Home
+                </Link>
+              </li>
+              <li className="flex justify-center items-center min-w-[100px]">
+                <Link className="hover:text-[#FFBA7B]" to="/">
+                  Create Event
+                </Link>
+              </li>
+              <li className="flex justify-center items-center min-w-[100px]">
+                <Link className="hover:text-[#FFBA7B]" to="/">
+                  Location
+                </Link>
+              </li>
             </ul>
             <div className="flex md:flex-row flex-col gap-3 w-full md:w-[unset]">
-              {token ? 
+              {token ? (
                 <div className="flex gap-5">
-                  <Link to="/profile" className="flex items-center gap-5 font-semibold text-sm leading-5">
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-5 font-semibold text-sm leading-5"
+                  >
                     <div className="p-[2px] border-transparent rounded-full bg-gradient-to-r from-[#9E91AE] to-[#450206]">
-                      {profiles.picture && <img className="border-[3.38px] border-white object-cover w-11 h-11 rounded-full"
-                        src={profiles.picture.startsWith("https")? profiles?.picture : `http://localhost:8888/uploads/${profiles?.picture}`} alt={profiles?.fullName}/>}
+                      {profiles.picture && (
+                        <img
+                          className="border-[3.38px] border-white object-cover w-11 h-11 rounded-full"
+                          src={
+                            profiles.picture.startsWith("https")
+                              ? profiles?.picture
+                              : `http://localhost:8888/uploads/${profiles?.picture}`
+                          }
+                          alt={profiles?.fullName}
+                        />
+                      )}
                     </div>
                     <div className="font-semibold text-sm leading-5">
                       <div>{profiles?.fullName}</div>
                     </div>
                   </Link>
-                  <button onClick={doLogout} className="btn btn-primary">Log Out</button>
+                  <button onClick={doLogout} className="btn btn-primary">
+                    Log Out
+                  </button>
                 </div>
-                :
+              ) : (
                 <div className="flex gap-3">
                   <div className="w-full">
-                    <Link className="text-[#38291B] hover:text-white hover:bg-[#38291B] w-full min-w-[120px] inline-block text-center py-2 font-bold rounded"
-                      to="/sign-in">Login</Link>
+                    <Link
+                      className="text-[#38291B] hover:text-white hover:bg-[#38291B] w-full min-w-[120px] inline-block text-center py-2 font-bold rounded"
+                      to="/sign-in"
+                    >
+                      Login
+                    </Link>
                   </div>
                   <div className="w-full">
-                    <Link className="bg-[#AA7C52] hover:bg-[#FFBA7B] w-full min-w-[120px] inline-block text-center py-2 text-white hover:text-[#38291B] font-bold rounded"
-                      to="/signup">Sign Up</Link>
+                    <Link
+                      className="bg-[#AA7C52] hover:bg-[#FFBA7B] w-full min-w-[120px] inline-block text-center py-2 text-white hover:text-[#38291B] font-bold rounded"
+                      to="/signup"
+                    >
+                      Sign Up
+                    </Link>
                   </div>
                 </div>
-              }
+              )}
             </div>
           </div>
         </div>
@@ -198,79 +274,122 @@ const Details = () => {
         <div className="flex w-[1126px] mx-[120px] mt-[50px] mb-[100px] p-[100px] bg-[#FFE8D3] rounded-[30px]">
           <div className="flex flex-col items-center flex-1 gap-[50px]">
             <div className="event-banner">
-              {event?.picture && <img src={event?.picture.startsWith("https")? event?.picture : `http://localhost:8888/uploads/${event.picture}`} alt={event.event}/>}
-              <div className="banner-text">
-            
-              </div>
+              {event?.picture && (
+                <img
+                  src={
+                    event?.picture.startsWith("https")
+                      ? event?.picture
+                      : `http://localhost:8888/uploads/${event.picture}`
+                  }
+                  alt={event.event}
+                />
+              )}
+              <div className="banner-text"></div>
             </div>
             <div className="flex">
               <span className="flex gap-[18px]">
-                <i data-feather="heart"></i>
-                <p className="font-semibold text-xl leading-7 tracking-[1px]">Add to Wishlist</p>
+                <button onClick={addRemoveWishlist}>
+                  {wishlist === true ? (
+                    <i className="self-center">
+                      <FaHeart size={28} color="red" />
+                    </i>
+                  ) : (
+                    <i className="self-center">
+                      <FiHeart size={28} color="red" />
+                    </i>
+                  )}
+                </button>
+                {/* <i className="self-center">
+                  <FiHeart size={28} />
+                </i> */}
+                <p className="font-semibold text-xl leading-7 tracking-[1px]">
+                  Add to Wishlist
+                </p>
               </span>
             </div>
           </div>
           <div className="w-[462px] flex-1">
             <div className="flex flex-col gap-[30px] border-b-2 border-gray-800 pb-[30px]">
-              <div className="font-semibold text-2xl leading-9 flex items-center tracking-[2px]">{event?.event}</div>
+              <div className="font-semibold text-2xl leading-9 flex items-center tracking-[2px]">
+                {event?.event}
+              </div>
               <div className="flex justify-between">
                 <div>
                   <span className="flex">
                     <i data-feather="map-pin"></i>
-                    <p className="font-medium text-sm leading-7 tracking-[1px]">{event?.location}, Indonesia</p>
+                    <p className="font-medium text-sm leading-7 tracking-[1px]">
+                      {event?.location}, Indonesia
+                    </p>
                   </span>
                 </div>
                 <div>
                   <span className="flex">
                     <i data-feather="clock"></i>
-                    <p className="font-medium text-sm leading-7 tracking-[1px]">{moment(event?.date).format("ddd, MMM Do 'YY, h:mm A")}</p>
+                    <p className="font-medium text-sm leading-7 tracking-[1px]">
+                      {moment(event?.date).format("ddd, MMM Do 'YY, h:mm A")}
+                    </p>
                   </span>
                 </div>
               </div>
               <div className="flex flex-col gap-[11px]">
-                <div className="font-medium text-sm leading-7 tracking-[0.5px]">Attendees</div>
+                <div className="font-medium text-sm leading-7 tracking-[0.5px]">
+                  Attendees
+                </div>
                 <div>
-                  <img src={viewers} alt="avatars"/>
+                  <img src={viewers} alt="avatars" />
                 </div>
               </div>
             </div>
             <div className="pt-[30px]">
-              <div className="font-semibold text-2xl leading-9 flex items-center tracking-[2px] mb-[15px]">Event Detail</div>
-              <div className="font-normal text-xs leading-5 tracking-[1px] mb-[10px]">{event?.descriptions}</div>
-              <div className="mt-[10px] mb-[25px]"><a href="#">Read more</a></div>
-              <div className="font-semibold text-2xl leading-9 flex items-center tracking-[2px] mb-[15px]">Location</div>
-              <img src={mapLoc} alt="map-location"/>
-              <div className="mt-[50px] flex flex-col justify-center items-start">
-                <Link to={`/select-section/${id}`} className="w-full h-[40px] bg-[#AA7C52] rounded-2xl text-center text-[#FFBA7B]">
-            Buy Tickets
-                </Link>
-
+              <div className="font-semibold text-2xl leading-9 flex items-center tracking-[2px] mb-[15px]">
+                Event Detail
               </div>
-
+              <div className="font-normal text-xs leading-5 tracking-[1px] mb-[10px]">
+                {event?.descriptions}
+              </div>
+              <div className="mt-[10px] mb-[25px]">
+                <a href="#">Read more</a>
+              </div>
+              <div className="font-semibold text-2xl leading-9 flex items-center tracking-[2px] mb-[15px]">
+                Location
+              </div>
+              <img src={mapLoc} alt="map-location" />
+              <div className="mt-[50px] flex flex-col justify-center items-start">
+                <Link
+                  to={`/select-section/${id}`}
+                  className="w-full h-[40px] bg-[#AA7C52] rounded-2xl text-center text-[#FFBA7B]"
+                >
+                  Buy Tickets
+                </Link>
+              </div>
             </div>
-        
           </div>
         </div>
       </main>
       <footer className="flex flex-col md:gap-0 gap-[50px] md:justify-items-center md:mx-[218px] md:h-[308px]">
-
         <div className="flex-1 flex flex-col md:flex-row justify-items-center md:mx-0 mx-[30px] gap-[50px] md:gap-[125px]">
           <div className="flex flex-col gap-[15px]">
             <div className="flex items-center text-2xl font-bold gap-px tracking-wider">
-              <img className="w-12 h-12" src={weTick} alt="wetick-logo"/>
+              <img className="w-12 h-12" src={weTick} alt="wetick-logo" />
               <span className="text-[#38291B]">We</span>
               <span className="text-[#FFBA7B]">tick</span>
             </div>
-            <div className="mt-[15px] font-medium text-base tracking-wide leading-4">Find event you love with our</div>
+            <div className="mt-[15px] font-medium text-base tracking-wide leading-4">
+              Find event you love with our
+            </div>
             <div className="flex gap-[20px]">
               <span>
-                <img className="w-5 h-5" src={fbGrey} alt="fb-grey"/>
+                <img className="w-5 h-5" src={fbGrey} alt="fb-grey" />
               </span>
               <span>
-                <img className="w-5 h-5" src={whatsappGrey} alt="whatsapp-grey"/>
+                <img
+                  className="w-5 h-5"
+                  src={whatsappGrey}
+                  alt="whatsapp-grey"
+                />
               </span>
               <span>
-                <img className="w-5 h-5" src={igGrey} alt="ig-grey"/>
+                <img className="w-5 h-5" src={igGrey} alt="ig-grey" />
               </span>
               <span>
                 <img className="w-5 h-5" src={twitterGrey} alt="twitter-grey" />
@@ -278,9 +397,10 @@ const Details = () => {
             </div>
           </div>
 
-
           <div className="flex flex-1 flex-col gap-[20px]">
-            <span className="font-semibold text-base tracking-wide">Wetick</span>
+            <span className="font-semibold text-base tracking-wide">
+              Wetick
+            </span>
             <ul className="flex flex-col gap-[15px] font-medium text-sm leading-5 tracking-wide text-[#C1C5D0]">
               <li>About Us</li>
               <li>Features</li>
@@ -290,7 +410,9 @@ const Details = () => {
             </ul>
           </div>
           <div className="flex flex-1 flex-col gap-[20px]">
-            <span className="font-semibold text-base tracking-wide">Features</span>
+            <span className="font-semibold text-base tracking-wide">
+              Features
+            </span>
             <ul className="flex flex-col gap-[15px] font-medium text-sm leading-5 tracking-wide text-[#C1C5D0]">
               <li>Booking</li>
               <li>Create Events</li>
@@ -299,7 +421,9 @@ const Details = () => {
             </ul>
           </div>
           <div className="flex flex-1 flex-col gap-[20px]">
-            <span className="font-semibold text-base tracking-wide">Company</span>
+            <span className="font-semibold text-base tracking-wide">
+              Company
+            </span>
             <ul className="flex flex-col gap-[15px] font-medium text-sm leading-5 tracking-wide text-[#C1C5D0]">
               <li>Partnership</li>
               <li>Help</li>
@@ -308,13 +432,10 @@ const Details = () => {
               <li>Sitemap</li>
             </ul>
           </div>
-
         </div>
-        <div
-          className="md:w-[306] md:h-[24px] md:mt-[-100px] md:mb-[50px] m-[30px] font-medium text-base tracking-wide leading-4">
+        <div className="md:w-[306] md:h-[24px] md:mt-[-100px] md:mb-[50px] m-[30px] font-medium text-base tracking-wide leading-4">
           © 2020 Wetick All Rights Reserved
         </div>
-
       </footer>
       {/* <div className="flex justify-center flex-col h-screen items-center text-5xl">
         <div>{event?.event}</div>
@@ -322,7 +443,6 @@ const Details = () => {
         <Link to={`/select-section/${id}`} className="btn btn-accent">Buy Ticket</Link>
       </div> */}
     </>
-    
-  )
-}
-export default Details
+  );
+};
+export default Details;
